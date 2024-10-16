@@ -1,0 +1,11 @@
+robot_run:
+  ros__parameters:
+    fieldnames: ['t','FRc','FRf','FRt','FLc','FLf','FLt','BRc','BRf','BRt','BLc','BLf','BLt']
+    body_to_feet0: [ 0.11 , -0.07 , 0.12, 0.11 ,  0.07 , 0.12,-0.11 , -0.07 , 0.12,-0.11 ,  0.07 , 0.12]
+    body_to_feet_rest: [ 0.124 , -0.1 , 0.018, 0.124 ,  0.1 , 0.018, -0.124 , -0.1 , 0.018, -0.124 ,  0.1 , 0.018]
+    com_orientation0: [0. , 0. , 0.]
+    com_position0: [0. , 0. , 0.]
+    gait_offset0: [0.5 , 0.0 , 0.0 , 0.5] # [0. , 0.25 , 0.75 , 0.5] creep gait
+    step_period0: 0.4
+    loop_latency: 0.015
+    use_sim_time: false
