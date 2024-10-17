@@ -19,7 +19,7 @@ def b(t,k,point):
 
 
 #gait planner in order to move all feet
-class trotGait:
+class TrotGait:
     def __init__(self):
         self.bodytoFeet = np.zeros([4,3])  
         self.phi = 99999.
