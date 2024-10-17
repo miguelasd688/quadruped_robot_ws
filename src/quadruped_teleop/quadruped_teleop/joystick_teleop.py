@@ -1,16 +1,14 @@
-import numpy as np
-
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Twist
 
-from evdev import InputDevice, categorize, ecodes
-from select import select
 
 from quadruped_teleop.joystick import Joystick
 
 from robot_interfaces.msg import Commands
 from robot_interfaces.msg import RobotStatus
+
+
+
 
 class PS5Controller(Node):
 
@@ -19,8 +17,12 @@ class PS5Controller(Node):
         self.cmd_publisher = self.create_publisher(Commands, 'controller_command', 10)
         self.status_publisher = self.create_publisher(RobotStatus, 'controller_status', 10)
         self.timer = self.create_timer(0.02, self.read_joystick)
+
+        self.declare_parameter('device_events', '')
+        event_path = self.get_parameter('device_events').get_parameter_value().string_value
         self.joystick = Joystick()
-        self.joystick.conect('/dev/input/event3')
+        self.joystick.conect(event_path)
+
 
     def read_joystick(self):
         # Call read() from joystick
@@ -42,7 +44,6 @@ class PS5Controller(Node):
 
         self.cmd_publisher.publish(cmd)
         self.status_publisher.publish(status)
-        self.get_logger().info(f'Published Command: V={cmd.linear_velocity}, angle={cmd.linear_angle}, rest_flag={status.rest_flag}, kill_flag={status.kill_flag}')
 
 
 

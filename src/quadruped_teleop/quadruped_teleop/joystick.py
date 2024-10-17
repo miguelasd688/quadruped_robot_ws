@@ -6,12 +6,58 @@ Created on Mon Mar  9 14:05:02 2020
 @author: miguel-asd
 """
 
+import sys
+import time
+import numpy as np
+
+from os import system, name
 from evdev import InputDevice, categorize, ecodes
 from select import select
-import numpy as np
-import sys
+
+
+class PS5:
+    def __init__(self):
+        X: 403
+        triangle: 307
+        circle: 305
+        square: 308
+        start: 315
+        ps: 316
+        r1: 311
+        l1: 310
+        r2: "ABS_RZ"
+        l2: "ABS_Z"
+        right_joy_x: "ABS_RX"
+        right_joy_y: "ABS_RY"
+        left_joy_x: "ABS_X"
+        left_joy_y: "ABS_Y"
+        arrow_x: 17
+        arrow_y: 16
+
+    
+
+
+
 
 class Joystick:
+    ps5 = {
+        "X": 403,
+        "triangle": 307,
+        "circle": 305,
+        "square": 308,
+        "start": 315,
+        "ps": 316,
+        "r1": 311,
+        "l1": 310,
+        "r2": "ABS_RZ",
+        "l2": "ABS_Z",
+        "right_joy_x": "ABS_RX",
+        "right_joy_y": "ABS_RY",
+        "left_joy_x": "ABS_X",
+        "left_joy_y": "ABS_Y",
+        "arrow_x": 17,
+        "arrow_y": 16}
+
     def __init__(self):
 
         self.L3 = np.array([0. , 0.])
@@ -53,6 +99,17 @@ class Joystick:
         self.calibration = 0
         self.increment = 0
         
+        self.last_time = time.time()
+
+    def clear(self):
+        # for windows
+        if name == 'nt':
+            _ = system('cls')
+        # for mac and linux(here, os.name is 'posix')
+        else:
+            _ = system('clear')
+
+
     def conect(self , event):
         try:
             # python3 /usr/local/lib/python3.10/dist-packages/evdev/evtest.py 
@@ -60,7 +117,8 @@ class Joystick:
             self.gamepad = InputDevice(event)
             print('Bluetooth joystick conected at: ', event)
         except:
-            print('Bluetooth joystick not conect. Try: python3 /usr/local/lib/python3.10/dist-packages/evdev/evtest.py')
+            print(f'Cannot hear from {event}') 
+            print('Try: python3 /usr/local/lib/python3.10/dist-packages/evdev/evtest.py')
             sys.exit()
             pass
     
@@ -121,9 +179,9 @@ class Joystick:
                         elif ecodes.bytype[absevent.event.type][absevent.event.code] == "ABS_Y": #Ly
                             self.L3data[1] = absevent.event.value - 127.0
                         elif ecodes.bytype[absevent.event.type][absevent.event.code] == "ABS_RY": #R2
-                            self.R2data = absevent.event.value + 32767
+                            self.R2data = absevent.event.value - 127.0
                         elif ecodes.bytype[absevent.event.type][absevent.event.code] == "ABS_RX": #L2
-                            self.L2data = absevent.event.value + 32767
+                            self.L2data = absevent.event.value - 127.0
                         elif ecodes.bytype[absevent.event.type][absevent.event.code] == "ABS_Z": #Rx
                             self.R3data[0] = absevent.event.value - 127.0
                         elif ecodes.bytype[absevent.event.type][absevent.event.code] == "ABS_RZ": #Ry
@@ -192,6 +250,23 @@ class Joystick:
                 self.CoM_orn[1] = np.deg2rad(self.L3[1]/5)
                 self.CoM_orn[2] = - np.deg2rad(self.R2/2000) + np.deg2rad(self.L2/2000)
                 
+            if (time.time() - self.last_time >= 0.05):
+                self.last_time = time.time()
+                self.clear()
+                print('JoyStick___________________________________________________')
+                print('')
+                print(f'    · pose_mode: {self.poseMode}, rest_flag: {self.Rest}, kill_flag:{self.Kill}')
+                print('')
+                print(f'    · R_JOY_X: {self.R3[0]}, R_JOY_Y: {self.R3[1]}, L_POT: {self.L2}')
+                print(f'    · L_JOY_X: {self.L3[0]}, L_JOY_Y: {self.L3[1]}, L_POT: {self.R2}')
+                print('')
+                print(f'    · CoM_pos: {self.CoM_pos}, CoM_orn: {self.CoM_orn}')
+                print(f'    · CoM_pos: {self.V}, angle: {self.angle}, Wrot: {self.Wrot}')
+
+
         except:
             pass
+
+
+
         return self.bodyAngle , self.CoM_pos , self.CoM_orn , self.V ,-self.angle , -self.Wrot , self.T , self.compliantMode , self.Kill , self.Rest , self.poseMode 
