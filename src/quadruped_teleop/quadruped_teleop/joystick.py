@@ -6,8 +6,6 @@ Created on Mon Mar  9 14:05:02 2020
 @author: miguel-asd
 """
 
-import sys
-import time
 import numpy as np
 
 from os import system, name
@@ -15,53 +13,47 @@ from evdev import InputDevice, categorize, ecodes
 from select import select
 
 
-class PS5:
-    def __init__(self):
-        X: 403
-        triangle: 307
-        circle: 305
-        square: 308
-        start: 315
-        ps: 316
-        r1: 311
-        l1: 310
-        r2: "ABS_RZ"
-        l2: "ABS_Z"
-        right_joy_x: "ABS_RX"
-        right_joy_y: "ABS_RY"
-        left_joy_x: "ABS_X"
-        left_joy_y: "ABS_Y"
-        arrow_x: 17
-        arrow_y: 16
+def Controller():
+    #code values for PS5 controller
+    return {
+            'X': 304,
+            'triangle': 307,
+            'circle': 305,
+            'square': 308,
+            'start': 315,
+            'ps': 316,
+            'r1': 311,
+            'l1': 310,
+            'r2': "ABS_RZ",
+            'l2': "ABS_Z",
+            'right_joy_x': "ABS_RX",
+            'right_joy_y': "ABS_RY",
+            'left_joy_x': "ABS_X",
+            'left_joy_y': "ABS_Y",
+            'arrow_x': "ABS_HAT0X",
+            'arrow_y': "ABS_HAT0Y"
+    }
 
     
-
-
-
-
-class Joystick:
-    ps5 = {
-        "X": 403,
-        "triangle": 307,
-        "circle": 305,
-        "square": 308,
-        "start": 315,
-        "ps": 316,
-        "r1": 311,
-        "l1": 310,
-        "r2": "ABS_RZ",
-        "l2": "ABS_Z",
-        "right_joy_x": "ABS_RX",
-        "right_joy_y": "ABS_RY",
-        "left_joy_x": "ABS_X",
-        "left_joy_y": "ABS_Y",
-        "arrow_x": 17,
-        "arrow_y": 16}
-
+class RobotInputs:
     def __init__(self):
-
-        self.L3 = np.array([0. , 0.])
-        self.R3 = np.array([0. , 0.])
+        self.step_period = 0.4
+        self.linear_velocity = 0.
+        self.linear_angle = 0.
+        self.angular_velocity = 0.
+        self.compliant_mode = False
+        self.pose_mode = True
+        self.kill = False
+        self.rest_mode = True
+        self.com_pos = np.zeros(3)
+        self.com_orn = np.zeros(3)
+        self.calibration = 0
+        self.heigth_increment = 0
+    
+class RawValues:
+    def __init__(self):
+        self.l_joy = np.array([0. , 0.])
+        self.r_joy = np.array([0. , 0.])
         self.oL3 = np.array([0. , 0.])
         self.oR3 = np.array([0. , 0.])
         self.L3data = np.array([0. , 0.])
@@ -84,22 +76,14 @@ class Joystick:
         self.triangle=0
         self.circle=0
         self.square=0
-        
-        self.T = 0.4
-        self.V = 0.
-        self.angle = 0.
-        self.Wrot = 0.
-        self.compliantMode = False
-        self.poseMode = True
-        self.Kill = False
-        self.Rest = True
-        self.bodyAngle = 0.
-        self.CoM_pos = np.zeros(3)
-        self.CoM_orn = np.zeros(3)
-        self.calibration = 0
-        self.increment = 0
-        
-        self.last_time = time.time()
+
+
+class Joystick:
+
+    def __init__(self, robotInputs: RobotInputs, rawValues: RawValues):    
+        self.inputs = robotInputs
+        self.raw = rawValues
+
 
     def clear(self):
         # for windows
@@ -115,20 +99,23 @@ class Joystick:
             # python3 /usr/local/lib/python3.10/dist-packages/evdev/evtest.py 
             # or sudo jstest /dev/input/js0 for identify event
             self.gamepad = InputDevice(event)
-            print('Bluetooth joystick conected at: ', event)
+            return True
         except:
-            print(f'Cannot hear from {event}') 
-            print('Try: python3 /usr/local/lib/python3.10/dist-packages/evdev/evtest.py')
-            sys.exit()
-            pass
+            return False
+            
+            
     
     def read(self):
+        last_r_joy = self.raw.r_joy
+        last_l_joy = self.raw.l_joy
+        last_L2 = self.raw.L2
+        last_R2 = self.raw.R2
+
         try:
             r,w,x = select([self.gamepad.fd], [], [], 0.)
             
             if r:
                 for event in self.gamepad.read():
-    #                print(event)
                     if event.type == ecodes.EV_KEY:
                         if event.value == 1:                            
     #                         if event.code == 307:#triangle
@@ -136,36 +123,28 @@ class Joystick:
     #                                 self.compliantMode = False
     #                             elif self.compliantMode == False:
     #                                 self.compliantMode = True  
-                            if event.code == 305:#X
-                                if self.poseMode == True:
-                                    self.poseMode = False
-                                elif self.poseMode == False:
-                                    self.poseMode = True
-                            if event.code == 313:#start
-                                if self.Kill == False:
-                                    self.Kill = True
-                                elif self.Kill == True:
-                                    self.Kill = False
-                            if event.code == 316: #PS      ( 307:#Y )
-                                if self.Rest == False:
-                                    self.Rest = True                                
-                                elif self.Rest == True:
-                                    self.Rest = False
-                            if event.code == 309:#R1
-                                self.R1data += 0.0005
-                            #if event.code == 297:#R2
-                            #    self.R2data += 0.0005
+                            if event.code == Controller()['square']:
+                                if self.inputs.pose_mode == True:
+                                    self.inputs.pose_mode = False
+                                else:
+                                    self.inputs.pose_mode = True
+                            elif event.code == Controller()['start']:
+                                if self.inputs.kill == False:
+                                    self.inputs.kill = True
+                                else:
+                                    self.inputs.kill = False
+                            elif event.code == Controller()['ps']:
+                                if self.inputs.rest_mode == False:
+                                    self.inputs.rest_mode = True                                
+                                elif self.inputs.rest_mode == True:
+                                    self.inputs.rest_mode = False
+                            elif event.code == Controller()['r1']:#R1
+                                self.raw.R1data += 0.0005
                                 
-                            if event.code == 308:#L1
-                                self.L1data -= 0.0005
-                            #if event.code == 296:#L2
-                            #    self.L2data -= 0.0005
+                            elif event.code == Controller()['l1']:#L1
+                                self.raw.L1data -= 0.0005
                         else:
-                            print("button released")
-                            self.L2data = 0.
-                            self.R2data = 0.
-                            self.L1data = 0.
-                            self.R1data = 0.
+                            pass
                     ########################################  for my own joystick
                     #      ^           #     ^            #
                     #    ABS_Y         #    ABS_RY        #
@@ -174,99 +153,56 @@ class Joystick:
                     #######################################
                     elif event.type == ecodes.EV_ABS:
                         absevent = categorize(event)
-                        if ecodes.bytype[absevent.event.type][absevent.event.code] == "ABS_X": #Lx
-                            self.L3data[0] = absevent.event.value - 127.0
-                        elif ecodes.bytype[absevent.event.type][absevent.event.code] == "ABS_Y": #Ly
-                            self.L3data[1] = absevent.event.value - 127.0
-                        elif ecodes.bytype[absevent.event.type][absevent.event.code] == "ABS_RY": #R2
-                            self.R2data = absevent.event.value - 127.0
-                        elif ecodes.bytype[absevent.event.type][absevent.event.code] == "ABS_RX": #L2
-                            self.L2data = absevent.event.value - 127.0
-                        elif ecodes.bytype[absevent.event.type][absevent.event.code] == "ABS_Z": #Rx
-                            self.R3data[0] = absevent.event.value - 127.0
-                        elif ecodes.bytype[absevent.event.type][absevent.event.code] == "ABS_RZ": #Ry
-                            self.R3data[1] = absevent.event.value - 127.0
-                        
-                        elif ecodes.bytype[absevent.event.type][absevent.event.code] == "ABS_HAT0X":
+                        if ecodes.bytype[absevent.event.type][absevent.event.code] == Controller()['left_joy_x']: #Lx
+                            self.raw.L3data[0] = absevent.event.value - 127.0
+                        elif ecodes.bytype[absevent.event.type][absevent.event.code] == Controller()['left_joy_y']: #Ly
+                            self.raw.L3data[1] = absevent.event.value - 127.0
+                        elif ecodes.bytype[absevent.event.type][absevent.event.code] == Controller()['r2']: #R2
+                            self.raw.R2data = absevent.event.value - 127.0
+                        elif ecodes.bytype[absevent.event.type][absevent.event.code] == Controller()['l2']: #L2
+                            self.raw.L2data = absevent.event.value - 127.0
+                        elif ecodes.bytype[absevent.event.type][absevent.event.code] == Controller()['right_joy_x']: #Rx
+                            self.raw.R3data[0] = absevent.event.value - 127.0
+                        elif ecodes.bytype[absevent.event.type][absevent.event.code] == Controller()['right_joy_y']: #Ry
+                            self.raw.R3data[1] = absevent.event.value - 127.0
+            
+                        elif ecodes.bytype[absevent.event.type][absevent.event.code] == Controller()['arrow_x']:
                             if absevent.event.value == 1:#right arrow 
-                                self.T += 0.01
+                                self.inputs.step_period += 0.01
                             elif absevent.event.value == -1:#left arrow 
-                                self.T -= 0.01 
-                        elif ecodes.bytype[absevent.event.type][absevent.event.code] == "ABS_HAT0Y":
+                                self.inputs.step_period -= 0.01 
+                        elif ecodes.bytype[absevent.event.type][absevent.event.code] == Controller()['arrow_y']:
                             if absevent.event.value == -1:#up arrow
-                                self.increment += 0.002
+                                self.inputs.heigth_increment += 0.002
                             elif absevent.event.value == 1:#down arrow
-                                self.increment -= 0.002
+                                self.inputs.heigth_increment -= 0.002
+                         
             
-            self.L3[0] = self.L3data[0]*0.1 + self.oL3[0]*0.9
-            self.L3[1] = self.L3data[1]*0.1 + self.oL3[1]*0.9
-            self.R3[0] = self.R3data[0]*0.1 + self.oR3[0]*0.9
-            self.R3[1] = self.R3data[1]#*0.51 + self.oR3[1]*0.49
-            self.R2 = self.R2data*0.1 + self.oR2*0.9
-            self.L2 = self.L2data*0.1 + self.oL2*0.9
+            self.raw.l_joy[0] = self.raw.L3data[0]*0.1 + last_l_joy[0]*0.9
+            self.raw.l_joy[1] = self.raw.L3data[1]*0.1 + last_l_joy[1]*0.9
+            self.raw.r_joy[0] = self.raw.R3data[0]*0.1 + last_r_joy[0]*0.9
+            self.raw.r_joy[1] = self.raw.R3data[1]#*0.51 + self.oR3[1]*0.49
+            self.raw.R2 = self.raw.R2data*0.1 + last_R2*0.9
+            self.raw.L2 = self.raw.L2data*0.1 + last_L2*0.9
 
-#             if sumR2 == True
-#                 self.R2data += 0.0005
-#                 
-#             if sumL2 == True
-#                 self.L2data += 0.0005
-#                 
-#             self.L2 = self.L2data*0.05 + self.oL2*0.95
-#             self.R2 = self.R2data*0.05 + self.oR2*0.95
-#             if sumR2 == True
-#                 self.R2data += 0.0005
-#             elif sumL2 == True
-#                 self.L2data += 0.0005
-#                 
-#             self.L1 = self.L1data*0.05 + self.oL1*0.95
-#             self.R1 = self.R1data*0.05 + self.oR1*0.95
-            
-            
-            self.oL3[0] = self.L3[0]
-            self.oL3[1] = self.L3[1]
-            self.oR3[0] = self.R3[0]
-            self.oR3[1] = self.R3[1]
-            
-            self.oL2 = self.L2
-            self.oR2 = self.R2
-            self.oL1 = self.L1
-            self.oR1 = self.R1
-            
-            if self.poseMode == False:           
-                self.V = np.sqrt(self.L3[1]**2 + self.L3[0]**2)/300.
-                self.angle = np.rad2deg(np.arctan2(-self.L3[0] , -self.L3[1]))
-                self.Wrot = -self.R3[0]/1500.
-        #        Lrot = 0.
-                if self.V <= 0.005:
-                    self.V = 0.
-                if self.Wrot <= 0.005 and self.Wrot >= -0.005:
-                    self.Wrot = 0.
+            if self.inputs.pose_mode == False:           
+                self.inputs.linear_velocity = np.sqrt(self.raw.l_joy[1]**2 + self.raw.l_joy[0]**2)/300.
+                self.inputs.linear_angle = np.rad2deg(np.arctan2(-self.raw.l_joy[0] , -self.raw.l_joy[1]))
+                self.inputs.angular_velocity = -self.raw.r_joy[0]/1500.
+                if self.inputs.linear_velocity <= 0.005:
+                    self.inputs.linear_velocity = 0.
+                if self.inputs.angular_velocity <= 0.005 and self.inputs.angular_velocity >= -0.005:
+                    self.inputs.angular_velocity = 0.
             else:
-                self.CoM_pos[0] = self.R1 + self.L1  # self.R3[1]/10000
-                #self.CoM_pos[1] = -self.R3[0]/10000 
-                self.CoM_pos[2] = self.R3[1]/5000 + self.increment # self.R3[0]/5000 + 
+                self.inputs.com_pos[0] = self.raw.R1 + self.raw.L1  # self.r_joy[1]/10000
+                self.inputs.com_pos[2] = self.raw.r_joy[1]/5000 + self.inputs.heigth_increment # self.r_joy[0]/5000 + 
                                 
-                self.CoM_orn[0] = np.deg2rad(self.L3[0]/5)
-                self.CoM_orn[1] = np.deg2rad(self.L3[1]/5)
-                self.CoM_orn[2] = - np.deg2rad(self.R2/2000) + np.deg2rad(self.L2/2000)
+                self.inputs.com_orn[0] = np.deg2rad(self.raw.l_joy[0]/5)
+                self.inputs.com_orn[1] = np.deg2rad(self.raw.l_joy[1]/5)
+                self.inputs.com_orn[2] = - np.deg2rad(self.raw.R2/2000) + np.deg2rad(self.raw.L2/2000)
                 
-            if (time.time() - self.last_time >= 0.05):
-                self.last_time = time.time()
-                self.clear()
-                print('JoyStick___________________________________________________')
-                print('')
-                print(f'    · pose_mode: {self.poseMode}, rest_flag: {self.Rest}, kill_flag:{self.Kill}')
-                print('')
-                print(f'    · R_JOY_X: {self.R3[0]}, R_JOY_Y: {self.R3[1]}, L_POT: {self.L2}')
-                print(f'    · L_JOY_X: {self.L3[0]}, L_JOY_Y: {self.L3[1]}, L_POT: {self.R2}')
-                print('')
-                print(f'    · CoM_pos: {self.CoM_pos}, CoM_orn: {self.CoM_orn}')
-                print(f'    · CoM_pos: {self.V}, angle: {self.angle}, Wrot: {self.Wrot}')
-
-
         except:
             pass
 
 
-
-        return self.bodyAngle , self.CoM_pos , self.CoM_orn , self.V ,-self.angle , -self.Wrot , self.T , self.compliantMode , self.Kill , self.Rest , self.poseMode 
+        return self.inputs, self.raw
