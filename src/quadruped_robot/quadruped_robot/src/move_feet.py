@@ -30,9 +30,9 @@ def moveFeetTo(dt, body , new_body_to_feet , h , moveTime):
                 body.to_feet[l2[k],1] = moveY2[it]
                 body.to_feet[l2[k],2] = start_body_to_feet[l2[k],2] + ( 4*h*(it/nit-0.5)**2 - h )
                 
-                angles , transformedBodytoFeet = body.kinematics.solve(body.orientation, 
-                                                                            body.position, 
-                                                                            body.to_feet)
+                angles = body.kinematics.solve(body.orientation, 
+                                               body.position, 
+                                               body.to_feet)
                 pulsesCommand = angleToPulse.convert(angles)
                 it = it + 1
 
@@ -45,7 +45,6 @@ def moveFeetZ(dt , body , to_height , move_Time):
     moveZ2 = np.linspace(body.to_feet[1,2] , to_height , nit)
     moveZ3 = np.linspace(body.to_feet[2,2] , to_height , nit)
     moveZ4 = np.linspace(body.to_feet[3,2] , to_height , nit)
-    print('Standing up')
     it = int(0)
     MVlastTime=0
     while it < nit:
@@ -56,8 +55,8 @@ def moveFeetZ(dt , body , to_height , move_Time):
             body.to_feet[1,2] = moveZ2[it]
             body.to_feet[2,2] = moveZ3[it]
             body.to_feet[3,2] = moveZ4[it]
-            angles , transformedBodytoFeet = body.kinematics.solve(body.orientation, 
-                                                                        body.position, 
-                                                                        body.to_feet)
+            angles = body.kinematics.solve(body.orientation, 
+                                           body.position, 
+                                           body.to_feet)
             pulsesCommand = angleToPulse.convert(angles)
             it = it + 1

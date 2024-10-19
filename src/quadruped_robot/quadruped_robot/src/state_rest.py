@@ -1,17 +1,19 @@
 from __future__ import annotations
+"""
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .state_kill import KillState
     from .state_static import StaticState
+"""
 
 from .state import State
-
+from . import state_kill
+from . import state_static
 
 class RestState(State):
     def handleKill(self) -> None:
         print("RestState handles going to KillState. Going KillState")
-        from .state_kill import KillState
-        self._robotPlayer.transitionTo(KillState())
+        self._robotPlayer.transitionTo(state_kill.KillState())
 
     def handleRest(self) -> None:
         if not (self.isActive):
@@ -22,11 +24,9 @@ class RestState(State):
     def handleStatic(self) -> None:
         print("RestState handles going to StaticState. Going StaticState")
         self._robotPlayer.standMove()
-        from .state_static import StaticState
-        self._robotPlayer.transitionTo(StaticState())
+        self._robotPlayer.transitionTo(state_static.StaticState())
 
     def handleDynamic(self) -> None:
         print("RestState handles going to DynamicState. Going to StaticState first")
-        from .state_static import StaticState
-        self._robotPlayer.transitionTo(StaticState())
+        self._robotPlayer.transitionTo(state_static.StaticState())
 

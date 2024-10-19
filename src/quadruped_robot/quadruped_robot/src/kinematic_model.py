@@ -103,4 +103,4 @@ class RobotKinematics:
                                  [_bodytofeetBR[0] , _bodytofeetBR[1] , _bodytofeetBR[2]],
                                  [_bodytofeetBL[0] , _bodytofeetBL[1] , _bodytofeetBL[2]]])
         
-        return angles, _bodytofeet
+        return angles

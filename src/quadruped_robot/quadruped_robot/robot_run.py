@@ -53,7 +53,6 @@ class RobotRun(Node):
         self.angular_velocity = msg.angular_velocity
         self.com_position = msg.com_position  
         self.com_orientation = msg.com_orientation 
-        print()
         if not (self.cmd_received):
             self.cmd_received = True
 
@@ -98,7 +97,7 @@ class RobotRun(Node):
             'com_orientation': self.com_orientation,
             'linear_velocity': self.linear_velocity,
             'linear_angle': self.linear_angle,
-            'angular_velocity': self.angular_velocity,
+            'angular_velocity': self.angular_velocity
         }
 
 
