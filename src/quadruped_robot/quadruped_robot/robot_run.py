@@ -8,7 +8,7 @@ import rclpy
 from rclpy.node import Node
 from robot_interfaces.msg import Commands
 from robot_interfaces.msg import RobotStatus
-from robot_interfaces.msg import BodyToFeet
+from robot_interfaces.msg import JointAngles
 
 from .src.robot_player import RobotPlayer
 from .src.state_rest import RestState
@@ -38,7 +38,7 @@ class RobotRun(Node):
         self.last_time_print = time.time()
         self.get_logger().info('Robot Run node has started.')
         
-        self.feet_publisher = self.create_publisher(BodyToFeet, '/body_to_feet', 10)
+        self.feet_publisher = self.create_publisher(JointAngles, '/body_to_feet', 10)
 
         self.cmd = self.create_subscription(
             Commands,
@@ -119,7 +119,7 @@ class RobotRun(Node):
             br_angles[i] = self.robot_player.body.joint_angles[2,i]
             bl_angles[i] = self.robot_player.body.joint_angles[3,i]
 
-        ang = BodyToFeet()
+        ang = JointAngles()
         ang.fr_foot = fr_angles
         ang.fl_foot = fl_angles
         ang.br_foot = br_angles

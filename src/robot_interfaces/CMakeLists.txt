@@ -29,7 +29,7 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Commands.msg"
   "msg/RobotStatus.msg"
-  "msg/BodyToFeet.msg"
+  "msg/JointAngles.msg"
   DEPENDENCIES geometry_msgs # Add packages that above messages depend on
 )
 
