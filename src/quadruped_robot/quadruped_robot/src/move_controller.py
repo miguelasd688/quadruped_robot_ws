@@ -2,6 +2,7 @@
 from .move_feet import moveFeetZ , moveFeetTo 
 
 class MoveController():
+    #robot Controller to generate secuence of movements
     def __init__(self, body, loop_latency):
         self.body = body
         self.loop_latency = loop_latency
@@ -13,7 +14,7 @@ class MoveController():
     #set start_body_to_feet
     def initAction(self):
         if(self.movement_iterations < 1):
-            print('init new secuence')
+            print('    |__|__init new secuence')
             self.start_body_to_feet = self.body.to_feet.copy()
 
     # reset iteractor and set next action
@@ -26,13 +27,15 @@ class MoveController():
     def updateMovement(self, end_body_to_feet, action, n_iterations):
         if (action == self.actions['heigh_set']):
             if (self.movement_iterations < n_iterations):
-                self.body.to_feet = moveFeetZ(self.start_body_to_feet , end_body_to_feet , n_iterations, self.movement_iterations)
+                self.body.to_feet = moveFeetZ(self.body.to_feet, self.start_body_to_feet , end_body_to_feet , n_iterations, self.movement_iterations)
+                #print('    |__|__|__Setting robot height')
                 #print(f'foot: {self.body.to_feet[0,:]} start: {self.start_body_to_feet[0,:]} | it: {self.movement_iterations} of {n_iterations}')
                 self.movement_iterations += 1
         elif (action == self.actions['feet_place']):
             h = 0.06
             if (self.movement_iterations < n_iterations):
-                self.body.to_feet = moveFeetTo(self.start_body_to_feet , end_body_to_feet , h , n_iterations, self.movement_iterations)
+                self.body.to_feet = moveFeetTo(self.body.to_feet, self.start_body_to_feet , end_body_to_feet , h , n_iterations, self.movement_iterations)
+                #print('    |__|__|__Placing feet to new position')
                 #print(f'foot: {self.body.to_feet[0,:]} start: {self.start_body_to_feet[0,:]} | it: {self.movement_iterations} of {n_iterations}')
                 self.movement_iterations += 1
 
@@ -40,6 +43,7 @@ class MoveController():
     ## STAND UP ROUTINE
     def updateStandUp(self, desired_body_to_feet):
         move_done = False
+        print("    |__Standing up move in progress...")
         if (self.action_now == self.actions['end']):
             move_done = True
             self.action_now = self.actions['ready']
@@ -64,6 +68,7 @@ class MoveController():
 
     ## LAY DOWN ROUTINE
     def updateLayDown(self, desired_body_to_feet):
+        print("    |__Laying down move in progress...")
         move_done = False
         if (self.action_now == self.actions['end']):
             move_done = True

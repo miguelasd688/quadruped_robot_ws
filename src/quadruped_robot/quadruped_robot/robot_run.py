@@ -2,6 +2,7 @@ import time
 import csv
 import sys
 import numpy as np
+from os import system, name
 
 import rclpy
 from rclpy.node import Node
@@ -34,6 +35,7 @@ class RobotRun(Node):
         self.armed = False
 
         self.timer = self.create_timer(self.loop_latency, self.robot_main_loop)
+        self.last_time_print = time.time()
         self.get_logger().info('Robot Run node has started.')
         
         self.feet_publisher = self.create_publisher(BodyToFeet, '/body_to_feet', 10)
@@ -124,18 +126,36 @@ class RobotRun(Node):
         ang.bl_foot = bl_angles
         self.feet_publisher.publish(ang)
 
+    def clear(self):
+        # for windows
+        if name == 'nt':
+            _ = system('cls')
+        # for mac and linux(here, os.name is 'posix')
+        else:
+            _ = system('clear')
 
+    def printInformation(self, latency):
+        if (time.time() - self.last_time_print >= 0.1):
+            self.last_time_print = time.time()
+            self.clear()
+            self.get_logger().info('')
+            self.get_logger().info('robot run (Robot armed)____________fps: '+ str(1.0/latency))
+            self.get_logger().info('')
+            self.get_logger().info('fr: ' + str(self.robot_player.body.to_feet[0,:]))
+                                   
     def robot_main_loop(self):
         if not (self.cmd_received and self.status_received):
             self.get_logger().info("Waiting for command and status messages...")
             return
         if not (self.armed):
             self.armed = True
-            self.get_logger().info("Robot armed")
+            
 
         loop_time = time.time() - self.last_time
         self.last_time = time.time()
         self.t = time.time() - self.start_time
+        self.printInformation(loop_time)
+        
         self.robot_player.setDesiredStateVariables(self.robotDesiredStates())
         
         if (self.kill_flag):
@@ -150,7 +170,7 @@ class RobotRun(Node):
                     self.robot_player.updateDynamicControl()
 
         self.publishAngleTopic()
-
+        
 
 
 def main(args=None):

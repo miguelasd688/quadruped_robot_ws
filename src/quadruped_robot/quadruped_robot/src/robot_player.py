@@ -30,6 +30,8 @@ class RobotStateVariables:
 
 
 class RobotPlayer(StatesManager):
+    # Init all robot variables and instanciate quadruped model
+    # Defines the differentes states the robot can be
     def __init__(self, state: State, parameters: dict):
         super().__init__(state)
         self.loop_latency = parameters['loop_latency']
@@ -70,7 +72,6 @@ class RobotPlayer(StatesManager):
                                                                           self.position0, 
                                                                           self.body.to_feet)
         #pulsesCommand = angleToPulse.convert(self.body.joint_angles)
-
         exit()
 
 
@@ -89,7 +90,6 @@ class RobotPlayer(StatesManager):
                                                                                self.position0, 
                                                                                self.body.to_feet)
         #pulsesCommand = angleToPulse.convert(self.body.joint_angles)
-
         return move_done    
 
     def layDownMove(self):
@@ -116,7 +116,6 @@ class RobotPlayer(StatesManager):
                                             self.step_period0 , 
                                             self.gait_offset , 
                                             self.body_to_feet0)
-        
         self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0 + self.body.orientation, 
                                                                           self.position0 + self.body.position, 
                                                                           self.body.to_feet)
