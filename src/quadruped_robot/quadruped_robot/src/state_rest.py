@@ -16,17 +16,17 @@ class RestState(State):
         self._robotPlayer.transitionTo(state_kill.KillState())
 
     def handleRest(self) -> None:
-        if not (self.isActive):
-            self.isActive = True
+        if not (self.is_active):
+            self.is_active = True
             print("RestState staying in rest mode.")
         self._robotPlayer.robotResting()
 
     def handleStatic(self) -> None:
-        print("RestState handles going to StaticState. Going StaticState")
-        self._robotPlayer.standMove()
-        self._robotPlayer.transitionTo(state_static.StaticState())
+        if (self._robotPlayer.standUpMove()):
+            print("RestState handles going to StaticState. Going StaticState")
+            self._robotPlayer.transitionTo(state_static.StaticState())
 
     def handleDynamic(self) -> None:
         print("RestState handles going to DynamicState. Going to StaticState first")
-        self._robotPlayer.transitionTo(state_static.StaticState())
+        pass
 

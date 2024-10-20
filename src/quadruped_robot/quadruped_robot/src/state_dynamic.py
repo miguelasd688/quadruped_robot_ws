@@ -1,27 +1,25 @@
 from __future__ import annotations
 
 from .state import State
-
+from . import state_kill
+from . import state_static
 
 class DynamicState(State):
     def handleKill(self) -> None:
         print("DynamicState handles going to KillState. Going KillState")
-        from .state_kill import KillState
-        self._robotPlayer.transitionTo(KillState())
+        self._robotPlayer.transitionTo(state_kill.KillState())
     
     def handleRest(self) -> None:
         print("DynamicState handle going to RestState. Going to StaticState first")
-        from .state_static import StaticState
-        self._robotPlayer.transitionTo(StaticState())
+        self._robotPlayer.transitionTo(state_static.StaticState())
 
     def handleStatic(self) -> None:
         print("DynamicState staying in static mode.")
-        from .state_static import StaticState
-        self._robotPlayer.transitionTo(StaticState())
+        self._robotPlayer.transitionTo(state_static.StaticState())
 
     def handleDynamic(self) -> None:
-        if not (self.isActive):
-            self.isActive = True
+        if not (self.is_active):
+            self.is_active = True
             print("DynamicState staying in dynamic mode")
         self._robotPlayer.dynamicControl()
         

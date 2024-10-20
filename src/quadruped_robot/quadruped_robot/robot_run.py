@@ -7,6 +7,7 @@ import rclpy
 from rclpy.node import Node
 from robot_interfaces.msg import Commands
 from robot_interfaces.msg import RobotStatus
+from robot_interfaces.msg import BodyToFeet
 
 from .src.robot_player import RobotPlayer
 from .src.state_rest import RestState
@@ -34,6 +35,9 @@ class RobotRun(Node):
 
         self.timer = self.create_timer(self.loop_latency, self.robot_main_loop)
         self.get_logger().info('Robot Run node has started.')
+        
+        self.feet_publisher = self.create_publisher(BodyToFeet, '/body_to_feet', 10)
+
         self.cmd = self.create_subscription(
             Commands,
             'controller_command',
@@ -99,6 +103,26 @@ class RobotRun(Node):
             'linear_angle': self.linear_angle,
             'angular_velocity': self.angular_velocity
         }
+    
+
+    def publishAngleTopic(self):    
+        fr_angles = np.array([0.0 , -0.785 , 1.57])
+        fl_angles = np.array([0.0 , -0.785 , 1.57])
+        br_angles = np.array([0.0 ,  0.785 , -1.57])
+        bl_angles = np.array([0.0 ,  0.785 , -1.57])
+        #self.get_logger().info('angle type:' + str(type(self.robot_player.body.joint_angles)))
+        for i in range(len(fr_angles)):
+            fr_angles[i] = self.robot_player.body.joint_angles[0,i]
+            fl_angles[i] = self.robot_player.body.joint_angles[1,i]
+            br_angles[i] = self.robot_player.body.joint_angles[2,i]
+            bl_angles[i] = self.robot_player.body.joint_angles[3,i]
+
+        ang = BodyToFeet()
+        ang.fr_foot = fr_angles
+        ang.fl_foot = fl_angles
+        ang.br_foot = br_angles
+        ang.bl_foot = bl_angles
+        self.feet_publisher.publish(ang)
 
 
     def robot_main_loop(self):
@@ -112,7 +136,7 @@ class RobotRun(Node):
         loop_time = time.time() - self.last_time
         self.last_time = time.time()
         self.t = time.time() - self.start_time
-        self.robot_player.setRobotStateVariables(self.robotDesiredStates())
+        self.robot_player.setDesiredStateVariables(self.robotDesiredStates())
         
         if (self.kill_flag):
             self.robot_player.updateKill()
@@ -124,7 +148,10 @@ class RobotRun(Node):
                     self.robot_player.updateStaticControl()
                 else:
                     self.robot_player.updateDynamicControl()
-            
+
+        self.publishAngleTopic()
+
+
 
 def main(args=None):
     rclpy.init(args=args)

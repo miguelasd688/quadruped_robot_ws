@@ -6,12 +6,11 @@ import time
 import numpy as np
 from sys import exit
 
-from .states_manager import StatesManager
-from .kinematic_model import RobotKinematics
-from .gait_planner import TrotGait
+from . import move_controller
+from . import kinematic_model
+from . import gait_planner
 from . import angleToPulse
-from .move_feet import moveFeetZ , moveFeetTo 
-
+from .states_manager import StatesManager
 
 class RobotStateVariables:
     def __init__(self, body_to_feet_rest, orientation0, position0):
@@ -21,8 +20,12 @@ class RobotStateVariables:
         self.linear_velocity = 0.
         self.linear_angle = 0.
         self.angular_velocity = 0.
-        self.kinematics = RobotKinematics('><')
-
+        self.kinematics = kinematic_model.RobotKinematics('><')
+        angles , self.to_feet = self.kinematics.solve(orientation0, 
+                                       position0, 
+                                       body_to_feet_rest)
+        self.joint_angles = np.zeros([4,3])
+        
 
 
 
@@ -32,19 +35,27 @@ class RobotPlayer(StatesManager):
         self.loop_latency = parameters['loop_latency']
         self.orientation0 = np.array(parameters['com_orientation0'])
         self.position0 = np.array(parameters['com_position0'])
-        self.body_to_feet0 = np.array([parameters['body_to_feet0'][i:i + 3] for i in range(0, len(parameters['body_to_feet0']), 3)])
-        self.body_to_feet_rest = np.array([parameters['body_to_feet_rest'][i:i + 3] for i in range(0, len(parameters['body_to_feet_rest']), 3)])
+        self.body_to_feet0 = np.array([parameters['body_to_feet0'][0:3],
+                                       parameters['body_to_feet0'][3:6],
+                                       parameters['body_to_feet0'][6:9],
+                                       parameters['body_to_feet0'][9:12]])
+        self.body_to_feet_rest = np.array([parameters['body_to_feet_rest'][0:3],
+                                           parameters['body_to_feet_rest'][3:6],
+                                           parameters['body_to_feet_rest'][6:9],
+                                           parameters['body_to_feet_rest'][9:12]])
         self.gait_offset = np.array(parameters['gait_offset0'])
         self.step_period0 = parameters['step_period0']
 
-        self.trot = TrotGait()
+        self.trot = gait_planner.TrotGait()
 
         self.body = RobotStateVariables(self.body_to_feet_rest, 
                                         self.orientation0, 
                                         self.position0)
+        
+        self.controller = move_controller.MoveController(self.body, self.loop_latency)
 
 
-    def setRobotStateVariables(self, robot_desired_states: dict):
+    def setDesiredStateVariables(self, robot_desired_states: dict):
         self.body.orientation = robot_desired_states['com_orientation']
         self.body.position = robot_desired_states['com_position']
         self.body.linear_velocity = robot_desired_states['linear_velocity']
@@ -55,64 +66,58 @@ class RobotPlayer(StatesManager):
     def killProgram(self):
         print("Reseting microcontroller and closing...")
         time.sleep(0.4)
-        print(f'foot: {self.body.to_feet[0,:]} | pos: {self.body.position} | orn: {self.body.orientation}')
-        angles = self.body.kinematics.solve(self.orientation0, 
-                                            self.position0, 
-                                            self.body.to_feet)
-        pulsesCommand = angleToPulse.convert(angles)
+        self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0, 
+                                                                          self.position0, 
+                                                                          self.body.to_feet)
+        #pulsesCommand = angleToPulse.convert(self.body.joint_angles)
 
         exit()
 
 
     def robotResting(self):
-        self.body.to_feet = self.body_to_feet_rest.copy()
+        self.body.to_feet = self.body_to_feet_rest
+        self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0, 
+                                                                          self.position0, 
+                                                                          self.body.to_feet)
+        #pulsesCommand = angleToPulse.convert(self.body.joint_angles)
 
-        angles = self.body.kinematics.solve(self.orientation0, 
-                                            self.position0, 
-                                            self.body.to_feet)
-        pulsesCommand = angleToPulse.convert(angles)
 
+    def standUpMove(self):
+        move_done = False
+        self.body.to_feet, move_done = self.controller.updateStandUp(self.body_to_feet0.copy())
+        self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0, 
+                                                                               self.position0, 
+                                                                               self.body.to_feet)
+        #pulsesCommand = angleToPulse.convert(self.body.joint_angles)
 
-    def standMove(self):
-        ## STAND UP ROUTINE
-        h = 0.06 # step height in m.
-
-        print('Standing up')
-        moveFeetZ(self.loop_latency , self.body , self.body_to_feet0[0,2] , 1.0)
-
-        print('Init pose 0')
-        moveFeetTo(self.loop_latency , self.body , self.body_to_feet0 , h , 0.6)
-
+        return move_done    
 
     def layDownMove(self):
-        ##  RESTING ROUTINE
-        h = 0.06 # step height in m.
-        
-        print('Init REST')
-        moveFeetTo(self.loop_latency , self.body , self.body_to_feet_rest , h , 0.6)
-
-        print('Going rest')
-        moveFeetZ(self.loop_latency , self.body , self.body_to_feet_rest[0,2] , 1.0)
-
+        move_done = False
+        self.body.to_feet, move_done = self.controller.updateLayDown(self.body_to_feet_rest.copy())
+        self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0, 
+                                                                          self.position0, 
+                                                                          self.body.to_feet)
+        #pulsesCommand = angleToPulse.convert(self.body.joint_angles)
+        return move_done
 
     def staticControl(self):
-        print(f'foot: {self.body.to_feet[0,:]} | pos: {self.body.position} | orn: {self.body.orientation}')
-        self.body_to_feet = self.body_to_feet0.copy() # Static position.
-        angles = self.body.kinematics.solve(self.orientation0 + self.body.orientation, 
-                                            self.position0 + self.body.position, 
-                                            self.body.to_feet)
-        pulsesCommand = angleToPulse.convert(angles)
+        self.body.to_feet = self.body_to_feet0 # Static position.
+        self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0 + self.body.orientation, 
+                                                                          self.position0 + self.body.position, 
+                                                                          self.body.to_feet)
+        #pulsesCommand = angleToPulse.convert(self.body.joint_angles)
 
 
     def dynamicControl(self):
-        self.body_to_feet  = self.trot.loop(self.body.linear_velocity , 
+        self.body.to_feet  = self.trot.loop(self.body.linear_velocity , 
                                             self.body.linear_angle , 
                                             self.body.angular_velocity , 
                                             self.step_period0 , 
                                             self.gait_offset , 
                                             self.body_to_feet0)
         
-        angles = self.body.kinematics.solve(self.orientation0 + self.body.orientation, 
-                                            self.position0 + self.body.position, 
-                                            self.body.to_feet)
-        pulsesCommand = angleToPulse.convert(angles)
+        self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0 + self.body.orientation, 
+                                                                          self.position0 + self.body.position, 
+                                                                          self.body.to_feet)
+        #pulsesCommand = angleToPulse.convert(self.body.joint_angles)

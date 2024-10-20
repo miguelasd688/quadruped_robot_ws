@@ -5,8 +5,8 @@ from .state import State
 
 class KillState(State):
     def handleKill(self) -> None:
-        if not (self.isActive):
-            self.isActive = True
+        if not (self.is_active):
+            self.is_active = True
             print("KillState killing program.")
         self._robotPlayer.killProgram()
 

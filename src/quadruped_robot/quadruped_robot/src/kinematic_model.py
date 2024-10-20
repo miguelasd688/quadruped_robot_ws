@@ -98,9 +98,9 @@ class RobotKinematics:
         _bodytofeetFL = _bodytoFL0 + _FLcoord
         _bodytofeetBR = _bodytoBR0 + _BRcoord
         _bodytofeetBL = _bodytoBL0 + _BLcoord
-        _bodytofeet = np.matrix([[_bodytofeetFR[0] , _bodytofeetFR[1] , _bodytofeetFR[2]],
+        _bodytofeet = np.array([[_bodytofeetFR[0] , _bodytofeetFR[1] , _bodytofeetFR[2]],
                                  [_bodytofeetFL[0] , _bodytofeetFL[1] , _bodytofeetFL[2]],
                                  [_bodytofeetBR[0] , _bodytofeetBR[1] , _bodytofeetBR[2]],
                                  [_bodytofeetBL[0] , _bodytofeetBL[1] , _bodytofeetBL[2]]])
         
-        return angles
+        return angles, _bodytofeet

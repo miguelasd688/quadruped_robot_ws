@@ -16,7 +16,7 @@ class State(ABC):
     """
 
     def __init__(self):
-        self.isActive = False
+        self.is_active = False
 
     @property
     def context(self) -> RobotPlayer:
