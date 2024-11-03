@@ -1,6 +1,5 @@
 #include <math.h>
 
-
 #define RESTART_ADDR 0xE000ED0C
 #define READ_RESTART() (*(volatile uint32_t *)RESTART_ADDR)
 #define WRITE_RESTART(val) ((*(volatile uint32_t *)RESTART_ADDR) = (val))
@@ -51,8 +50,6 @@ struct vector {
 float angleBody;
 float oangleBody;
 
-float eang1 , eang2 , eang3 , eang4 , eang5 , eang6 , eang7 , eang8 , eang9 , eang10 , eang11 , eang12 , eang13;
-float enc1 , enc2 , enc3 , enc4 , enc5 , enc6 , enc7 , enc8 , enc9 , enc10 , enc11 , enc12 , enc13;
 
 float fe1 = 0;
 float fe2 = 0;
@@ -111,7 +108,7 @@ char receivedChars[numChars];
 //<0#-45#90#0#-45#90#0#45#-90#0#45#-90#90#0#0#0#0>
 
 
-void setup() {
+void setupA() {
 
   setupDisplay();
   Serial.begin(2000000);
@@ -164,7 +161,8 @@ void setup() {
 
 }
 
-void loop() {
+
+void loopA() {
 
 
   // put your main code here, to run repeatedly:
@@ -239,8 +237,8 @@ void loop() {
 
     
   }
-
 }
+
 
 void anglesDEBUG() {
   anglesIKBL.alpha = 45.0 + 10 * sin(6.28 * t / 0.8);

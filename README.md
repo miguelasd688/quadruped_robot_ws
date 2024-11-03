@@ -32,6 +32,9 @@ source install/local_setup.bash
   * msg/RobotStatus.msg
   * msg/JointAngles.msg
     custom topics to communicate between the nodes of the robot.
+* micro-ros w/ Teensy 4.1
+  * https://micro.ros.org/docs/tutorials/core/teensy_with_arduino/
+
 
 # Run robot_run node with parameters
 
