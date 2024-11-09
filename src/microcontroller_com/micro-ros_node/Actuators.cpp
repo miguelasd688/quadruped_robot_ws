@@ -49,8 +49,11 @@ void Actuators::MoveServos() {
 
 bool Actuators::StepMotors(bool RUN, bool SAFE, LegsAngle targetAngles) {
   //----------------if safe is already False, mantein servos in last position--------
-  if (RUN == true and SAFE == false) {  
-    targetAngles = IK.CalculateRobotAngles(targetAngles);         
+  if (RUN == true) {  
+    targetAngles.FR = IK.CalculateLegAngles(targetAngles.FR);
+    targetAngles.FL = IK.CalculateLegAngles(targetAngles.FL);
+    targetAngles.BR = IK.CalculateLegAngles(targetAngles.BR);
+    targetAngles.BL = IK.CalculateLegAngles(targetAngles.BL);       
         
     anglesServo[0] = targetAngles.FR.tetta;
     anglesServo[1] = targetAngles.FR.alpha;
@@ -64,20 +67,21 @@ bool Actuators::StepMotors(bool RUN, bool SAFE, LegsAngle targetAngles) {
     anglesServo[9] = targetAngles.BL.tetta;
     anglesServo[10] = targetAngles.BL.alpha;
     anglesServo[11] = targetAngles.BL.gamma;
-    for (int i = 0; i < sizeof(anglesServo); i++)
+    /*for (int i = 0; i < sizeof(anglesServo); i++)
     {
       oAnglesServo[i] = anglesServo[i];
-    }  
+    } */ 
     MoveServos();
     return false;
   }
   else if (RUN == false and SAFE == false) {
     SAFE = false;
-    for (int i = 0; i < sizeof(anglesServo); i++)
+    /*for (int i = 0; i < sizeof(anglesServo); i++)
     {
       anglesServo[i] = oAnglesServo[i];
-    }  
+    } */ 
     MoveServos();
+    return false;
   }
   return true;
 }
