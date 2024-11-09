@@ -12,10 +12,17 @@ other librearies:
 * Adafruit ST7735/ST7789 library (for LCD)
 * SimpleKalmanFilter
 
+Connect agent to enable microros transports:
+"""
+ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0
+"""
+
 
 publish angles to debug motor positions:
 
+"""
 ros2 topic pub /angles_msg_Float32MultiArray std_msgs/msg/Float32MultiArray "layout:
   dim: []
   data_offset: 0
 data: [0,-45,90,0,-45,90,0,45,-90,0,45,-90]"
+"""

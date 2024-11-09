@@ -1,7 +1,7 @@
 #define MAX_PULSE 2500
 #define MIN_PULSE 560
 
-/*---------------SERVO PIN DEFINITION------------------------*/
+//--------------SERVO PIN DEFINITION------------------------
 int freq = 125; // PWM frecuency can be choosen here.
 
 int actuators_pin[12] = { 6, 5, 4,//FR
@@ -14,7 +14,7 @@ int actuators_pin[12] = { 6, 5, 4,//FR
 int motorPin;
 int motor = 0;
 
-/*----------------- CALIBRATION PARAMETERS OF EACH SERVO -----------------*/
+//----------------- CALIBRATION PARAMETERS OF EACH SERVO -----------------
 //Regression data for motor
 //                 coxa      femur     tibia
 float a[13] = { -1.08333, -1.06667, -1.07778, //FR
@@ -46,23 +46,25 @@ float lowLim[13] = {50, 30, 30, 50, 30, 30, 50, 30, 30, 50, 30, 30};
 float highLim[13] = {130, 150, 150, 130, 150, 150, 130, 150, 150, 130, 150, 150};
 
 float fineAngle;
+float anglesServo[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+float oAnglesServo[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-void connectServos() {
-  for (int i = 0; i < sizeof(actuators_pin); i++)
+void ConnectServos() {
+  for (int i = 0; i < 12; i++)
   {
-    setNewServo(actuators_pin[i], freq);
+    SetNewServo(actuators_pin[i], freq);
   }
 }
 
 
-void setNewServo(int pin, int freq)
+void SetNewServo(int pin, int freq)
 {
   analogWriteFrequency(pin, freq); //tibia
   digitalWrite(pin, LOW);
   pinMode(pin, OUTPUT);
 }
 
-void servoWrite(int pin , float angle) {
+void ServoWrite(int pin , float angle) {
 
   float T = 1000000.0f / freq;
   float usec = float(MAX_PULSE - MIN_PULSE) * (angle / 180.0) + (float)MIN_PULSE;
@@ -73,7 +75,7 @@ void servoWrite(int pin , float angle) {
 
 
 
-float checkLimits(float angle , float lowLim , float highLim) {
+float CheckLimits(float angle , float lowLim , float highLim) {
 
   if ( angle >= highLim ) {
     angle = highLim;
@@ -84,20 +86,18 @@ float checkLimits(float angle , float lowLim , float highLim) {
   return angle;
 }
 
-void moveServos() {
-  //FR
-
-  for (int i = 0; i < sizeof(actuators_pin); i++)
+void MoveServos() {
+  for (int i = 0; i < 12; i++)
   {
-    anglesServo[i] = checkLimits(anglesServo[i] , lowLim[i] , highLim[i]);
-    fineAngle = a[i] * anglesServoFR.tetta + b[i];
-    servoWrite(actuators_pin[i] , fineAngle);
+    anglesServo[i] = CheckLimits(anglesServo[i] , lowLim[i] , highLim[i]);
+    fineAngle = a[i] * anglesServo[i] + b[i];
+    ServoWrite(actuators_pin[i] , fineAngle);
   }
 }
 
 
-void stepMotors() {
-  /*----------------if safe is already False, mantein servos in last position--------*/
+void StepMotors() {
+  //----------------if safe is already False, mantein servos in last position--------
   if (RUN == true) {
     SAFE = false;
 
@@ -122,7 +122,7 @@ void stepMotors() {
     {
       oAnglesServo[i] = anglesServo[i];
     }  
-    moveServos();
+    MoveServos();
   }
   else if (RUN == false and SAFE == false) {
     SAFE = false;
@@ -130,6 +130,6 @@ void stepMotors() {
     {
       anglesServo[i] = oAnglesServo[i];
     }  
-    moveServos();
+    MoveServos();
   }
 }

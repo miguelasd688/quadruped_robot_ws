@@ -135,6 +135,9 @@ float droll = 0;
 float odyaw = 0;
 float odpitch = 0;
 float odroll = 0;
+float ocoxa = 0;
+float ofemur = 0;
+float otibia = 0;
 float old_publisher_latency = 0;
 
 float ndivX = 7;
@@ -472,11 +475,41 @@ void startDisplay(int PAGE) {
     initAlerts();
 
   }
+  else if (PAGE == 4)
+  {
+    tft.setTextSize(1.6);
+
+    tft.setTextColor(LTBLUE);
+    tft.setCursor(2, 15);
+    tft.print("FR");
+    tft.setTextSize(1.5);
+    tft.drawLine(22, 8, 22, 28, LTYELLOW);
+    tft.drawLine(23, 8, 23, 28, LTYELLOW);
+    tft.drawLine(24, 8, 24, 28, LTYELLOW);
+
+    tft.setCursor(24, 5);
+    tft.setTextColor(LTYELLOW);
+    tft.print("- ");
+    tft.setTextColor(BLUE);
+    tft.println("coxa:");
+
+    tft.setCursor(24, 15);
+    tft.setTextColor(LTYELLOW);
+    tft.print("- ");
+    tft.setTextColor(BLUE);
+    tft.println("femur:");
+
+    tft.setCursor(24, 25);
+    tft.setTextColor(LTYELLOW);
+    tft.print("- ");
+    tft.setTextColor(BLUE);
+    tft.println("tibia:");
+
+    initAlerts();
+  }
+
 
 }
-
-
-
 
 
 
@@ -523,7 +556,7 @@ void displayUpdate() {
       startDisplay(PAGE);
       oPAGE = PAGE;
     }
-    infoText1();
+    InfoTextIMU();
 
     dyaw = deg2rad(imuSensor.GetYaw());
     dpitch = deg2rad(imuSensor.GetPitch());
@@ -618,6 +651,14 @@ void displayUpdate() {
       updatePlot(float(millis())*1000.0, previousPlot , Vin, timePlot , xini, yini, w, h, ndivX , ndivY, YELLOW);
       previousPlot = float(millis())*1000.0;
     }
+  }
+  else if (PAGE == 4)
+  {
+    if (oPAGE != PAGE) {
+      startDisplay(PAGE);
+      oPAGE = PAGE;
+    }
+    InfoTextAngles();
   }
 
   ot = t;
@@ -857,7 +898,7 @@ void infoText0() {
   oSAFE = SAFE;
 }
 
-void infoText1() {
+void InfoTextIMU() {
 
   tft.setTextSize(1.5);
   tft.setTextColor(BLACK);
@@ -879,6 +920,30 @@ void infoText1() {
   opitch = imuSensor.GetPitch();
   oroll = imuSensor.GetRoll();
 }
+
+void InfoTextAngles() {
+
+  tft.setTextSize(1.5);
+  tft.setTextColor(BLACK);
+  tft.setCursor(70, 5);
+  tft.print(ocoxa);
+  tft.setCursor(70, 15);
+  tft.print(ofemur);
+  tft.setCursor(70, 25);
+  tft.print(otibia);
+  tft.setTextColor(MAGENTA);
+  tft.setCursor(70, 5);
+  tft.print(anglesIKFR.tetta);
+  tft.setCursor(70, 15);
+  tft.print(anglesIKFR.alpha);
+  tft.setCursor(70, 25);
+  tft.print(anglesIKFR.gamma);
+
+  ocoxa = anglesIKFR.tetta;
+  ofemur = anglesIKFR.alpha;
+  otibia = anglesIKFR.gamma;
+}
+
 
 void startPlot( int x0, int y0, int w, int h, float ndivX , float ndivY , String voltage) {
   float tempx , tempy;
