@@ -1,7 +1,7 @@
-#include <SimpleKalmanFilter.h>
+/*#include <SimpleKalmanFilter.h>
 
 
-/*---------------ANALOG PIN DEFINITION------------------------*/
+//---------------ANALOG PIN DEFINITION------------------------
 
 
 int me1 = 15; //FR coxa
@@ -40,12 +40,12 @@ int me13data = 500000;
 float eang1 , eang2 , eang3 , eang4 , eang5 , eang6 , eang7 , eang8 , eang9 , eang10 , eang11 , eang12 , eang13;
 float enc1 , enc2 , enc3 , enc4 , enc5 , enc6 , enc7 , enc8 , enc9 , enc10 , enc11 , enc12 , enc13;
 
-/*
-  SimpleKalmanFilter(e_mea, e_est, q);
-  e_mea: Measurement Uncertainty
-  e_est: Estimation Uncertainty
-  q: Process Noise
-*/
+
+//  SimpleKalmanFilter(e_mea, e_est, q);
+//  e_mea: Measurement Uncertainty
+//  e_est: Estimation Uncertainty
+//  q: Process Noise
+
 float e_mea = 100;
 float q = 1;
 
@@ -119,3 +119,4 @@ void readEncoderAngles() {
   eang13 = ae[12] * enc13 + be[12];
 
 }
+*/

@@ -941,15 +941,15 @@ void InfoTextAngles() {
   tft.print(otibia);
   tft.setTextColor(MAGENTA);
   tft.setCursor(70, 5);
-  tft.print(anglesIKFR.tetta);
+  tft.print(anglesIK.FR.tetta);
   tft.setCursor(70, 15);
-  tft.print(anglesIKFR.alpha);
+  tft.print(anglesIK.FR.alpha);
   tft.setCursor(70, 25);
-  tft.print(anglesIKFR.gamma);
+  tft.print(anglesIK.FR.gamma);
 
-  ocoxa = anglesIKFR.tetta;
-  ofemur = anglesIKFR.alpha;
-  otibia = anglesIKFR.gamma;
+  ocoxa = anglesIK.FR.tetta;
+  ofemur = anglesIK.FR.alpha;
+  otibia = anglesIK.FR.gamma;
 }
 
 

@@ -1,4 +1,4 @@
-//int ffs0 = 0; //A0
+/*//int ffs0 = 0; //A0
 //int ffs1 = 1; //A1
 //int ffs2 = 2; //A2
 
@@ -67,11 +67,11 @@ struct vector readContacts(struct vector sensorOffset0 , struct vector sensorOff
   vout0prev = vout0;
   vout1prev = vout1;
   vout2prev = vout2;
-  /*
-    contactForces.tetta = map(vout0 - sensorOffset0.tetta , sensorOffset0.tetta , sensorOffset1.tetta , 0.0 , 1.0);
-    contactForces.alpha = map(vout1 - sensorOffset0.alpha , sensorOffset0.alpha , sensorOffset1.alpha , 0.0 , 1.0);
-    contactForces.gamma = map(vout2 - sensorOffset0.gamma , sensorOffset0.gamma , sensorOffset1.gamma , 0.0 , 1.0);
-  */
+  
+  //  contactForces.tetta = map(vout0 - sensorOffset0.tetta , sensorOffset0.tetta , sensorOffset1.tetta , 0.0 , 1.0);
+  //  contactForces.alpha = map(vout1 - sensorOffset0.alpha , sensorOffset0.alpha , sensorOffset1.alpha , 0.0 , 1.0);
+  //  contactForces.gamma = map(vout2 - sensorOffset0.gamma , sensorOffset0.gamma , sensorOffset1.gamma , 0.0 , 1.0);
+  //
   contactForces.tetta = vout0 - sensorOffset0.tetta;
   contactForces.alpha = vout1 - sensorOffset0.alpha;
   contactForces.gamma = vout2 - sensorOffset0.gamma;
@@ -92,4 +92,4 @@ void estimateForce() {
   //    we1 = (anglesServoFR.tetta - oanglesServoFR)/(t-ot);
   //    we2 = (anglesServoFL - oanglesServoFL)/(t-ot);
   //    we3 = (anglesServoBR - oanglesServoBR)/(t-ot);
-}
+}*/

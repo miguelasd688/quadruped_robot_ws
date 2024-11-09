@@ -12,7 +12,7 @@
 #include <std_msgs/msg/int32_multi_array.h>
 
 #include "IMUSensor.h"
-#include "actuators.h"
+#include "Actuators.h"
 
 
 #define LED_PIN 13
@@ -27,8 +27,6 @@
   if (uxr_millis() - init > MS) { X; init = uxr_millis();} \
 } while (0)\
 
-
-
 bool newData = false;
 bool recvComplete = false;
 bool CAL = false;
@@ -42,39 +40,7 @@ bool RUN = false;
 bool Push = false;
 bool oPush = false;
 
-struct vector {
-  float tetta;
-  float alpha;
-  float gamma;
-};////vector3
-
-struct vector anglesIKFR;
-struct vector anglesIKFL;
-struct vector anglesIKBR;
-struct vector anglesIKBL;
-
-struct vector anglesRawFR;
-struct vector anglesRawFL;
-struct vector anglesRawBR;
-struct vector anglesRawBL;
-
-
-struct vector anglesServoFR;
-struct vector anglesServoFL;
-struct vector anglesServoBR;
-struct vector anglesServoBL;
-struct vector oAnglesServoFR;
-struct vector oAnglesServoFL;
-struct vector oAnglesServoBR;
-struct vector oAnglesServoBL;
-
-struct vector contactForces;
-struct vector contactForcesFL;
-struct vector contactForcesBR;
-struct vector contactForcesBL;
-
-struct vector sensorOffset0;
-struct vector sensorOffset1;
+struct LegsAngle anglesIK;
 
 int PAGE = 0;
 int maxPages = 4; // MAX PAGES
@@ -108,7 +74,7 @@ std_msgs__msg__Float32MultiArray angles_msg;
 bool micro_ros_init_successful;
 long last_time;
 IMUSensor imuSensor;
-//Actuators actuators;
+Actuators actuators;
 
 enum states {
   WAITING_AGENT,
@@ -145,19 +111,19 @@ void subscription_callback(const void * msgin)
   const std_msgs__msg__Float32MultiArray * angles_msg = (const std_msgs__msg__Float32MultiArray *)msgin;
   if (angles_msg != NULL)
   {
-    anglesIKFR.tetta = angles_msg->data.data[0];
-    anglesIKFR.alpha = angles_msg->data.data[1];
-    anglesIKFR.gamma = angles_msg->data.data[2];
-    anglesIKFL.tetta = angles_msg->data.data[3];
-    anglesIKFL.alpha = angles_msg->data.data[4];
-    anglesIKFL.gamma = angles_msg->data.data[5];
-    anglesIKBR.tetta = angles_msg->data.data[6];
-    anglesIKBR.alpha = angles_msg->data.data[7];
-    anglesIKBR.gamma = angles_msg->data.data[8];
-    anglesIKBL.tetta = angles_msg->data.data[9];
-    anglesIKBL.alpha = angles_msg->data.data[10];
-    anglesIKBL.gamma = angles_msg->data.data[11];
-    StepMotors();
+    anglesIK.FR.tetta = angles_msg->data.data[0];
+    anglesIK.FR.alpha = angles_msg->data.data[1];
+    anglesIK.FR.gamma = angles_msg->data.data[2];
+    anglesIK.FL.tetta = angles_msg->data.data[3];
+    anglesIK.FL.alpha = angles_msg->data.data[4];
+    anglesIK.FL.gamma = angles_msg->data.data[5];
+    anglesIK.BR.tetta = angles_msg->data.data[6];
+    anglesIK.BR.alpha = angles_msg->data.data[7];
+    anglesIK.BR.gamma = angles_msg->data.data[8];
+    anglesIK.BL.tetta = angles_msg->data.data[9];
+    anglesIK.BL.alpha = angles_msg->data.data[10];
+    anglesIK.BL.gamma = angles_msg->data.data[11];
+    SAFE = actuators.StepMotors(RUN, SAFE, anglesIK);
   }
 }
 
@@ -253,7 +219,7 @@ void setup() {
 
   state = WAITING_AGENT;
 
-  ConnectServos();
+  actuators.ConnectServos();
   imuSensor.Initialize();
   
   setupDisplay();
@@ -299,7 +265,7 @@ void loop() {
   //READ BATTERY STATUS
   Vin = float(analogRead(pinVin));
   //feed battery IN with two reference voltage to relate with analog signal
-  Vin = map(Vin, 191, 83, 11.91 , 5.12);
+  Vin = map(Vin, 218, 83, 7.92 , 5.12);
   //Vin = 5.6 + 1.4*(1 + sin(3.14*t/5));
   //Vin = 7;
 
