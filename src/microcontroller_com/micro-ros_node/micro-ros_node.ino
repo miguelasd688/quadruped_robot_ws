@@ -14,7 +14,12 @@
 #include "IMUSensor.h"
 #include "actuators.h"
 
+
 #define LED_PIN 13
+#define RESTART_ADDR 0xE000ED0C
+#define READ_RESTART() (*(volatile uint32_t *)RESTART_ADDR)
+#define WRITE_RESTART(val) ((*(volatile uint32_t *)RESTART_ADDR) = (val))
+
 #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){return false;}}
 #define EXECUTE_EVERY_N_MS(MS, X)  do { \
   static volatile int64_t init = -1; \
@@ -71,7 +76,7 @@ struct vector contactForcesBL;
 struct vector sensorOffset0;
 struct vector sensorOffset1;
 
-int PAGE = 4;
+int PAGE = 0;
 int maxPages = 4; // MAX PAGES
 int pinVin = 27; // pin (teensy 4.1: 21)
 float Vin = 0;
@@ -215,7 +220,7 @@ bool create_entities()
   std_msgs__msg__Float32MultiArray__init(&angles_msg);
   angles_msg.data.capacity = 12;
   angles_msg.data.size = 12;
-  angles_msg.data.data = (float*) malloc(angles_msg.data.capacity * sizeof(float));git sta
+  angles_msg.data.data = (float*) malloc(angles_msg.data.capacity * sizeof(float));
 
   RCCHECK(rclc_executor_init(&executor_sub, &support.context, 1, &allocator));
   RCCHECK(rclc_executor_add_subscription(&executor_sub, &angles_subscriber, &angles_msg, &subscription_callback, ON_NEW_DATA));
@@ -232,10 +237,10 @@ void destroy_entities()
   free(status_msg.data.data);
   free(imu_msg.data.data);
 
-  rcl_subscription_fini(&angles_subscriber, &node);
   rcl_publisher_fini(&status_publisher, &node);
   rcl_publisher_fini(&imu_publisher, &node);
   rcl_timer_fini(&timer);
+  rcl_subscription_fini(&angles_subscriber, &node);
   rclc_executor_fini(&executor_pub);
   rclc_executor_fini(&executor_sub);
   rcl_node_fini(&node);
@@ -258,7 +263,7 @@ void setup() {
 void loop() {
   switch (state) {
     case WAITING_AGENT:
-      EXECUTE_EVERY_N_MS(500, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_AVAILABLE : WAITING_AGENT;);
+      EXECUTE_EVERY_N_MS(500, state = (RMW_RET_OK == rmw_uros_ping_agent(10, 1)) ? AGENT_AVAILABLE : WAITING_AGENT;);
       break;
     case AGENT_AVAILABLE:
       state = (true == create_entities()) ? AGENT_CONNECTED : WAITING_AGENT;
@@ -269,16 +274,17 @@ void loop() {
       };
       break;
     case AGENT_CONNECTED:
-      EXECUTE_EVERY_N_MS(200, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
+      EXECUTE_EVERY_N_MS(200, state = (RMW_RET_OK == rmw_uros_ping_agent(10, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
       if (state == AGENT_CONNECTED) {
         rclc_executor_spin_some(&executor_pub, RCL_MS_TO_NS(10));
         rclc_executor_spin_some(&executor_sub, RCL_MS_TO_NS(10));
       }
       break;
     case AGENT_DISCONNECTED:
-      destroy_entities();
-      state = WAITING_AGENT;
-      RUN = true;
+      //RUN = false;
+      //destroy_entities();
+      //state = WAITING_AGENT;
+      WRITE_RESTART(0x5FA0004);
       break;
     default:
       break;
@@ -289,23 +295,26 @@ void loop() {
   } else {
     digitalWrite(LED_PIN, 0);
   }
-  //----------------SELECT SCREEN MODE---------------
-  selectDisplayPage();
-  //----------------READ BATTERY STATUS---------------
+  
+  //READ BATTERY STATUS
   Vin = float(analogRead(pinVin));
   //feed battery IN with two reference voltage to relate with analog signal
   Vin = map(Vin, 191, 83, 11.91 , 5.12);
-  
   //Vin = 5.6 + 1.4*(1 + sin(3.14*t/5));
   //Vin = 7;
-  //----------------UPDATE STATUS LED---------------
+
+  //UPDATE BUTTON STATUS LED
   if (RUN == true) {
     digitalWrite(pinLed, HIGH);
   }
   else {
     digitalWrite(pinLed, LOW);
   }
-  
-  //-----------------------UPDATE SCREEN ------------------------
+  //SELECT SCREEN MODE AND UPDATE SCREEN
+  selectDisplayPage();
   printDisplayLCD();
+
+  if (KILL == true) {
+    WRITE_RESTART(0x5FA0004);
+  }
 }

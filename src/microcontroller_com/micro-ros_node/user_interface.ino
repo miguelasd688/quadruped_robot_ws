@@ -267,11 +267,19 @@ void initAlerts() {
   }
   tft.setTextSize(1.5);
 
-  tft.fillRoundRect(4, 108, 58, 17, 4 , DKGREEN);
-  tft.setTextColor(DKRED);
-  tft.setCursor(7, 113);
-  tft.println("POWER OFF"); 
-
+  if (RUN == false) {
+    tft.fillRoundRect(4, 108, 58, 17, 4 , DKGREEN);
+    tft.setTextColor(DKRED);
+    tft.setCursor(7, 113);
+    tft.println("AGENT OFF"); 
+  }
+  else {
+    tft.fillRoundRect(4, 108, 58, 17, 4 , GREEN);
+    tft.setTextColor(RED);
+    tft.setCursor(7, 113);
+    tft.setTextSize(1.5);
+    tft.println("AGENT ON");
+  }
   tft.fillRoundRect(66, 108, 58, 17, 4 , RED);
   tft.setTextColor(DKRED);
   tft.setCursor(72, 113);
@@ -733,14 +741,14 @@ void alerts() {
       tft.setTextColor(RED);
       tft.setCursor(7, 113);
       tft.setTextSize(1.5);
-      tft.println("POWER ON");
+      tft.println("AGENT ON");
     }
     else {
       tft.fillRoundRect(4, 108, 58, 17, 4 , DKGREEN);
       tft.setTextColor(DKRED);
       tft.setCursor(7, 113);
       tft.setTextSize(1.5);
-      tft.println("POWER OFF");
+      tft.println("AGENT OFF");
     }
 
     oRUN = RUN;
