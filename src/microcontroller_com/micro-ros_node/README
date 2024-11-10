@@ -1,11 +1,17 @@
 
 Firmware for teensy 4.1 using arduino:
 
-Setup
+Setup to compile:
 * Program from Raspberry Pi 4 with Ubuntu 22.04
 * Arduino IDE 2.2.1 (arduino-ide 2 for Raspberry Pi [https://github.com/koendv/arduino-ide-raspberrypi])
-* Teensyduino 1.59.0 (confirm it is correct in platform.txt of Arduino IDE)
-* micro_ros_arduino humble version [https://github.com/micro-ROS/micro_ros_arduino/tree/humble?tab=readme-ov-file]
+* Teensyduino 1.59.0 
+* Patch micro-ros to work with Teensyduino at ~/.Arduino15/packages/teensy/jardware/avr/1.59.0/platform.txt
+"""
+curl https://raw.githubusercontent.com/micro-ROS/micro_ros_arduino/foxy/extras/patching_boards/platform_teensy.txt > platform.txt
+"""
+* micro_ros_arduino humble version [https://github.com/micro-ROS/micro_ros_arduino/tree/humble?tab=readme-ov-file]. install it as .zip from Arduino IDE.
+
+* if you need to rebuild library just erase it from ~/Arduino/libraries folder and reinstall from Arduino IDE
 
 other librearies:
 * Adafruit BNO055 (for IMU)
