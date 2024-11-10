@@ -239,6 +239,7 @@ void loop() {
       }
       break;
     case AGENT_DISCONNECTED:
+      //TODO: make reconnection works, seems there is troubles destroying entities. 
       //RUN = false;
       //destroy_entities();
       //state = WAITING_AGENT;
