@@ -4,7 +4,6 @@
 #define MAX_PULSE 2500
 #define MIN_PULSE 560
 
-#include <Arduino.h>
 #include "InverseKinematicsSolver.h"
 
 class Actuators {
@@ -18,10 +17,10 @@ private:
   uint32_t freq = 125; // PWM frecuency can be choosen here.
   
   uint32_t actuators_pin[12] = { 6, 5, 4,//FR
-                            28, 29, 36,//FL
-                            3, 2, 1,//BR
-                            7, 24, 25//BL
-                          };
+                                 28, 29, 36,//FL
+                                 3, 2, 1,//BR
+                                 7, 24, 25//BL
+                               };
   
   
   uint32_t motorPin;

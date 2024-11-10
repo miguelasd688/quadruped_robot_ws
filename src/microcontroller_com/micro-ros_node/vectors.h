@@ -1,10 +1,8 @@
 #ifndef VECTORS_H
 #define VECTORS_H
 
+#include <Arduino.h>
 #include <math.h>
-
-#define PI 3.1415
-#define sq(x) (x*x)
 
 struct AngleVector
 {

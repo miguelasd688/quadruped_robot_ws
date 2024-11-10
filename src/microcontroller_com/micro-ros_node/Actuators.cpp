@@ -1,60 +1,56 @@
 #include "Actuators.h"
 
 void Actuators::ConnectServos() {
-  for (int i = 0; i < sizeof(actuators_pin); i++)
-  {
+  analogWriteResolution(12);
+  for (int i = 0; i < sizeof(actuators_pin); i++) {
     SetNewServo(actuators_pin[i]);
   }
 }
 
 
-void Actuators::SetNewServo(uint32_t pin)
-{
+void Actuators::SetNewServo(uint32_t pin) {
   analogWriteFrequency(pin, freq);
   digitalWrite(pin, LOW);
   pinMode(pin, OUTPUT);
 }
 
-void Actuators::ServoWrite(uint32_t pin , float angle) {
+void Actuators::ServoWrite(uint32_t pin, float angle) {
 
   float T = 1000000.0f / freq;
   float usec = float(MAX_PULSE - MIN_PULSE) * (angle / 180.0) + (float)MIN_PULSE;
   uint32_t duty = int(usec / T * 4096.0f);
-
-  analogWrite(pin , duty);
+  analogWrite(pin, duty);
 }
 
 
 
-float Actuators::CheckLimits(float angle , float lowLim , float highLim) {
+float Actuators::CheckLimits(float angle, float lowLim, float highLim) {
 
-  if ( angle >= highLim ) {
+  if (angle >= highLim) {
     angle = highLim;
+    return angle;
   }
-  if ( angle <= lowLim ) {
+  if (angle <= lowLim) {
     angle = lowLim;
+    return angle;
   }
   return angle;
 }
 
 void Actuators::MoveServos() {
-  for (int i = 0; i < sizeof(actuators_pin); i++)
-  {
-    anglesServo[i] = CheckLimits(anglesServo[i] , lowLim[i] , highLim[i]);
+  for (int i = 0; i < sizeof(actuators_pin); i++) {
+    anglesServo[i] = CheckLimits(anglesServo[i], lowLim[i], highLim[i]);
     fineAngle = a[i] * anglesServo[i] + b[i];
-    ServoWrite(actuators_pin[i] , fineAngle);
+    ServoWrite(actuators_pin[i], fineAngle);
   }
 }
 
 
 bool Actuators::StepMotors(bool RUN, bool SAFE, LegsAngle targetAngles) {
   //----------------if safe is already False, mantein servos in last position--------
-  if (RUN == true) {  
-    targetAngles.FR = IK.CalculateLegAngles(targetAngles.FR);
-    targetAngles.FL = IK.CalculateLegAngles(targetAngles.FL);
-    targetAngles.BR = IK.CalculateLegAngles(targetAngles.BR);
-    targetAngles.BL = IK.CalculateLegAngles(targetAngles.BL);       
-        
+  if (RUN == true) {
+    targetAngles = IK.CalculateRobotAngles(targetAngles);
+
     anglesServo[0] = targetAngles.FR.tetta;
     anglesServo[1] = targetAngles.FR.alpha;
     anglesServo[2] = targetAngles.FR.gamma;
@@ -70,17 +66,15 @@ bool Actuators::StepMotors(bool RUN, bool SAFE, LegsAngle targetAngles) {
     /*for (int i = 0; i < sizeof(anglesServo); i++)
     {
       oAnglesServo[i] = anglesServo[i];
-    } */ 
+    } */
     MoveServos();
     return false;
-  }
-  else if (RUN == false and SAFE == false) {
-    SAFE = false;
+  } else if (RUN == false and SAFE == false) {
     /*for (int i = 0; i < sizeof(anglesServo); i++)
     {
       anglesServo[i] = oAnglesServo[i];
-    } */ 
-    MoveServos();
+    } */
+    //MoveServos();
     return false;
   }
   return true;
