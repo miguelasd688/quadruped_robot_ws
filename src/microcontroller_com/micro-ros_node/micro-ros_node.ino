@@ -111,18 +111,10 @@ void subscription_callback(const void * msgin)
   const std_msgs__msg__Float32MultiArray * angles_msg = (const std_msgs__msg__Float32MultiArray *)msgin;
   if (angles_msg != NULL)
   {
-    anglesIK.FR.tetta = angles_msg->data.data[0];
-    anglesIK.FR.alpha = angles_msg->data.data[1];
-    anglesIK.FR.gamma = angles_msg->data.data[2];
-    anglesIK.FL.tetta = angles_msg->data.data[3];
-    anglesIK.FL.alpha = angles_msg->data.data[4];
-    anglesIK.FL.gamma = angles_msg->data.data[5];
-    anglesIK.BR.tetta = angles_msg->data.data[6];
-    anglesIK.BR.alpha = angles_msg->data.data[7];
-    anglesIK.BR.gamma = angles_msg->data.data[8];
-    anglesIK.BL.tetta = angles_msg->data.data[9];
-    anglesIK.BL.alpha = angles_msg->data.data[10];
-    anglesIK.BL.gamma = angles_msg->data.data[11];
+    for (int i = 0; i < angles_msg->data.capacity; i++)
+    {
+      anglesIK.asArray[i] = angles_msg->data.data[i];
+    }
     SAFE = actuators.StepMotors(RUN, SAFE, anglesIK);
   }
 }
@@ -185,7 +177,7 @@ bool create_entities()
 
   std_msgs__msg__Float32MultiArray__init(&angles_msg);
   angles_msg.data.capacity = 12;
-  angles_msg.data.size = 12;
+  angles_msg.data.size = 1;
   angles_msg.data.data = (float*) malloc(angles_msg.data.capacity * sizeof(float));
 
   RCCHECK(rclc_executor_init(&executor_sub, &support.context, 1, &allocator));

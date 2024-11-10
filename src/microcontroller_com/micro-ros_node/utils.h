@@ -11,12 +11,15 @@ struct AngleVector
   float gamma;
 };
 
-struct LegsAngle
+union LegsAngle
 {
-  struct AngleVector FR;
-  struct AngleVector FL;
-  struct AngleVector BR;
-  struct AngleVector BL;
+  struct {
+    struct AngleVector FR;
+    struct AngleVector FL;
+    struct AngleVector BR;
+    struct AngleVector BL;
+  };
+  float asArray[12];
 };
 
 struct CoordinatesVector
