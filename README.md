@@ -1,7 +1,7 @@
 # Description
 
 This repo contains the code running on a quadruped robot.
-Ececuted with Raspberry Pi 4, Ubuntu 24
+Ececuted with Raspberry Pi 4, Ubuntu 22
 
 It is implemented with ROS2
 
