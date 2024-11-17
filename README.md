@@ -42,8 +42,18 @@ source install/local_setup.bash
 ros2 run quadruped_robot robot_run --ros-args --params-file src/quadruped_robot/config/params.yaml
 ```
 
-# Paring bluetooth controller with bluetoothctl:
+# Launch robot and teleop
 
+* PS5 controller teleop:
+```
+ros2 launch quadruped_teleop ps5_controller.launch.py
+```
+* Robot node: 
+```
+ros2 launch quadruped_robot robot_launch.py
+```
+
+# Paring bluetooth controller with bluetoothctl:
 ```
 sudo bluetoothctl
 
