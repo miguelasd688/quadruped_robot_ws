@@ -42,6 +42,19 @@ source install/local_setup.bash
 ros2 run quadruped_robot robot_run --ros-args --params-file src/quadruped_robot/config/params.yaml
 ```
 
+
+#### Connect agent to enable microros transports:
+
+```
+ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0
+```
+
+# Run Foxgloves server:
+
+```
+ros2 launch foxglove_bridge foxglove_bridge_launch.xml
+```
+
 # Paring bluetooth controller with bluetoothctl:
 
 ```
