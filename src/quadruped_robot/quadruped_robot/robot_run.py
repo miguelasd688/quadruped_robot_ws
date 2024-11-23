@@ -9,6 +9,7 @@ from rclpy.node import Node
 from robot_interfaces.msg import Commands
 from robot_interfaces.msg import RobotStatus
 from robot_interfaces.msg import JointAngles
+from std_msgs.msg import Float32MultiArray
 
 from .src.robot_player import RobotPlayer
 from .src.state_rest import RestState
@@ -38,7 +39,7 @@ class RobotRun(Node):
         self.last_time_print = time.time()
         self.get_logger().info('Robot Run node has started.')
         
-        self.feet_publisher = self.create_publisher(JointAngles, '/body_to_feet', 10)
+        self.feet_publisher = self.create_publisher(Float32MultiArray, '/target_angle_msg', 10)
 
         self.cmd = self.create_subscription(
             Commands,
@@ -112,19 +113,18 @@ class RobotRun(Node):
         fl_angles = np.array([0.0 , -0.785 , 1.57])
         br_angles = np.array([0.0 ,  0.785 , -1.57])
         bl_angles = np.array([0.0 ,  0.785 , -1.57])
+        angles = np.concatenate((fr_angles, fl_angles, br_angles, bl_angles))
+
         #self.get_logger().info('angle type:' + str(type(self.robot_player.body.joint_angles)))
         for i in range(len(fr_angles)):
-            fr_angles[i] = self.robot_player.body.joint_angles[0,i]
-            fl_angles[i] = self.robot_player.body.joint_angles[1,i]
-            br_angles[i] = self.robot_player.body.joint_angles[2,i]
-            bl_angles[i] = self.robot_player.body.joint_angles[3,i]
+            angles[i] = self.robot_player.body.joint_angles[0,i]* 360.0 / (2 * 3.1415)
+            angles[3+i] = self.robot_player.body.joint_angles[1,i]* 360.0 / (2 * 3.1415)
+            angles[6+i] = self.robot_player.body.joint_angles[2,i]* 360.0 / (2 * 3.1415)
+            angles[9+i] = self.robot_player.body.joint_angles[3,i]* 360.0 / (2 * 3.1415)
 
-        ang = JointAngles()
-        ang.fr_foot = fr_angles
-        ang.fl_foot = fl_angles
-        ang.br_foot = br_angles
-        ang.bl_foot = bl_angles
-        self.feet_publisher.publish(ang)
+        msg = Float32MultiArray()
+        msg.data = angles.astype(np.float32).tolist()
+        self.feet_publisher.publish(msg)
 
     def clear(self):
         # for windows
@@ -145,7 +145,7 @@ class RobotRun(Node):
                                    
     def robot_main_loop(self):
         if not (self.cmd_received and self.status_received):
-            self.get_logger().info("Waiting for command and status messages...")
+            self.get_logger().info("Waiting for robot teleop input controller...")
             return
         if not (self.armed):
             self.armed = True

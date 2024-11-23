@@ -90,10 +90,7 @@ class PS5Controller(Node):
         time_now = time.time()
         latency = time_now - self.last_time
         self.last_time = time_now
-        # Call read() from joystick
-        #com_pos, com_orn, linear_velocity, linear_angle, w_rot, T, compliant_mode, kill, rest, pose_mode
         self.inputs , self.raw_values = self.joystick.read()
-        # publish to topic /cmd_vel
         self.publishCommands()
         self.publishStatus()
 

@@ -71,7 +71,6 @@ class RobotPlayer(StatesManager):
         self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0, 
                                                                           self.position0, 
                                                                           self.body.to_feet)
-        #pulsesCommand = angleToPulse.convert(self.body.joint_angles)
         exit()
 
 
@@ -80,7 +79,6 @@ class RobotPlayer(StatesManager):
         self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0, 
                                                                           self.position0, 
                                                                           self.body.to_feet)
-        #pulsesCommand = angleToPulse.convert(self.body.joint_angles)
 
 
     def standUpMove(self):
@@ -89,7 +87,6 @@ class RobotPlayer(StatesManager):
         self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0, 
                                                                                self.position0, 
                                                                                self.body.to_feet)
-        #pulsesCommand = angleToPulse.convert(self.body.joint_angles)
         return move_done    
 
     def layDownMove(self):
@@ -98,7 +95,6 @@ class RobotPlayer(StatesManager):
         self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0, 
                                                                           self.position0, 
                                                                           self.body.to_feet)
-        #pulsesCommand = angleToPulse.convert(self.body.joint_angles)
         return move_done
 
     def staticControl(self):
@@ -106,7 +102,6 @@ class RobotPlayer(StatesManager):
         self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0 + self.body.orientation, 
                                                                           self.position0 + self.body.position, 
                                                                           self.body.to_feet)
-        #pulsesCommand = angleToPulse.convert(self.body.joint_angles)
 
 
     def dynamicControl(self):

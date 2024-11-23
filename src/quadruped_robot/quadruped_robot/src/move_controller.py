@@ -51,14 +51,14 @@ class MoveController():
             self.action_now = self.actions['heigh_set']
 
         if (self.action_now == self.actions['heigh_set']):
-            move_time = 0.6
+            move_time = 1
             n_iterations = int(move_time/self.loop_latency)
             self.initAction()
             self.updateMovement(desired_body_to_feet, self.action_now, n_iterations)
             self.nextAction(self.actions['feet_place'], n_iterations)
         
         if (self.action_now == self.actions['feet_place']):          
-            move_time = 1.3
+            move_time = 0.4
             n_iterations = int(move_time/self.loop_latency)
             self.initAction()
             self.updateMovement(desired_body_to_feet, self.action_now, n_iterations)
@@ -77,14 +77,14 @@ class MoveController():
             self.action_now = self.actions['feet_place']
 
         if (self.action_now == self.actions['feet_place']):
-            move_time = 1.3
+            move_time = 0.4
             n_iterations = int(move_time/self.loop_latency)
             self.initAction()
             self.updateMovement(desired_body_to_feet, self.action_now, n_iterations)
             self.nextAction(self.actions['heigh_set'], n_iterations)
         
         elif (self.action_now == self.actions['heigh_set']):
-            move_time = 0.6
+            move_time = 1
             n_iterations = int(move_time/self.loop_latency)
             self.initAction()
             self.updateMovement(desired_body_to_feet, self.action_now, n_iterations)
