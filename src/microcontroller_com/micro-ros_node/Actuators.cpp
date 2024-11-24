@@ -17,7 +17,7 @@ bool Actuators::StepMotors(bool RUN, bool SAFE, struct LegsAngle targetAngles) {
   //----------------if safe is already False, mantein servos in last position--------
   if (RUN == true) {
     targetAngles = IK.CalculateRobotAngles(targetAngles);
-    for (int i = 0; i < 12; ++i) {
+    for (int i = 0; i < 12; i++) {
       anglesServo.asArray[i] = targetAngles.asArray[i];
     }
     Actuators::MoveServos();

@@ -12,7 +12,7 @@ Subscriptors:
 
 * For servomotors angles, you can directly publish to debug motor positions.
   ```
-  ros2 topic pub /target_angle_msg std_msgs/msg/Float32MultiArray data:\ [0,-45,90,0,-45,90,0,45,-90,0,45,-90]\
+  ros2 topic pub /target_angle_msg std_msgs/msg/Float32MultiArray data:\ [0,-45,90,0,-45,90,0,45,-90,0,45,-90]
   ```
 
 Publishers:
