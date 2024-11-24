@@ -9,7 +9,6 @@ from sys import exit
 from . import move_controller
 from . import kinematic_model
 from . import gait_planner
-from . import angleToPulse
 from .states_manager import StatesManager
 
 class RobotStateVariables:
@@ -55,15 +54,6 @@ class RobotPlayer(StatesManager):
                                         self.position0)
         
         self.controller = move_controller.MoveController(self.body, self.loop_latency)
-
-
-    def setDesiredStateVariables(self, robot_desired_states: dict):
-        self.body.orientation = robot_desired_states['com_orientation']
-        self.body.position = robot_desired_states['com_position']
-        self.body.linear_velocity = robot_desired_states['linear_velocity']
-        self.body.linear_angle = robot_desired_states['linear_angle']
-        self.body.angular_velocity = robot_desired_states['angular_velocity']
-
 
     def killProgram(self):
         print("Reseting microcontroller and closing...")

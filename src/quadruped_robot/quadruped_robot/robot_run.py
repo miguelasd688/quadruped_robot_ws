@@ -6,9 +6,8 @@ from os import system, name
 
 import rclpy
 from rclpy.node import Node
-from robot_interfaces.msg import Commands
-from robot_interfaces.msg import RobotStatus
-from robot_interfaces.msg import JointAngles
+from geometry_msgs.msg import Twist
+from std_msgs.msg import Int8MultiArray
 from std_msgs.msg import Float32MultiArray
 
 from .src.robot_player import RobotPlayer
@@ -39,36 +38,53 @@ class RobotRun(Node):
         self.last_time_print = time.time()
         self.get_logger().info('Robot Run node has started.')
         
-        self.feet_publisher = self.create_publisher(Float32MultiArray, '/target_angle_msg', 10)
+        self.feet_publisher = self.create_publisher(
+            Float32MultiArray,
+            'target_angle_msg',
+            10)
 
         self.cmd = self.create_subscription(
-            Commands,
-            'controller_command',
+            Twist,
+            'cmd_vel',
             self.listener_cmd_callback,
             100)
+        self.cmd = self.create_subscription(
+            Twist,
+            'com_state',
+            self.listener_com_callback,
+            100)
         self.status = self.create_subscription(
-            RobotStatus,
+            Int8MultiArray,
             'controller_status',
             self.listener_status_callback,
             100)
         self.subscriptions  # prevent unused variable warning
 
+    def listener_com_callback(self, msg):
+        self.robot_player.body.position[0] = msg.linear.x
+        self.robot_player.body.position[1] = msg.linear.y
+        self.robot_player.body.position[2] = msg.linear.z
+        self.robot_player.body.orientation[0] = msg.angular.x
+        self.robot_player.body.orientation[1] = msg.angular.y
+        self.robot_player.body.orientation[2] = msg.angular.z
+
+        if not (self.cmd_received):
+            self.cmd_received = True
 
     def listener_cmd_callback(self, msg):
-        self.linear_velocity = msg.linear_velocity
-        self.linear_angle = msg.linear_angle
-        self.angular_velocity = msg.angular_velocity
-        self.com_position = msg.com_position  
-        self.com_orientation = msg.com_orientation 
+        self.robot_player.body.linear_velocity = msg.linear.x
+        self.robot_player.body.linear_angle = msg.linear.y
+        self.robot_player.body.angular_velocity = msg.angular.z
+
         if not (self.cmd_received):
             self.cmd_received = True
 
 
     def listener_status_callback(self, msg):
-        self.kill_flag = msg.kill_flag
-        self.rest_flag = msg.rest_flag
-        self.compliant_mode = msg.compliant_mode
-        self.pose_mode = msg.pose_mode  
+        self.kill_flag = msg.data[0]
+        self.rest_flag = msg.data[1]
+        self.pose_mode = msg.data[2]
+        self.compliant_mode = msg.data[3]
         if not (self.status_received):
             self.status_received = True
 
@@ -92,21 +108,7 @@ class RobotRun(Node):
             'gait_offset0': self.get_parameter('gait_offset0').get_parameter_value().double_array_value,
             'step_period0': self.get_parameter('step_period0').get_parameter_value().double_value,
             'loop_latency': self.get_parameter('loop_latency').get_parameter_value().double_value
-        }
-    
-    
-
-
-
-    def robotDesiredStates(self):
-        return {
-            'com_position': self.com_position,
-            'com_orientation': self.com_orientation,
-            'linear_velocity': self.linear_velocity,
-            'linear_angle': self.linear_angle,
-            'angular_velocity': self.angular_velocity
-        }
-    
+        }   
 
     def publishAngleTopic(self):    
         fr_angles = np.array([0.0 , -0.785 , 1.57])
@@ -150,13 +152,10 @@ class RobotRun(Node):
         if not (self.armed):
             self.armed = True
             
-
         loop_time = time.time() - self.last_time
         self.last_time = time.time()
         self.t = time.time() - self.start_time
         self.printInformation(loop_time)
-        
-        self.robot_player.setDesiredStateVariables(self.robotDesiredStates())
         
         if (self.kill_flag):
             self.robot_player.updateKill()
