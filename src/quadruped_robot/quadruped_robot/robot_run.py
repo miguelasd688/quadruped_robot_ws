@@ -8,7 +8,8 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Int8MultiArray
-from std_msgs.msg import Float32MultiArray
+from sensor_msgs.msg import JointState
+from std_msgs.msg import Header
 
 from .src.robot_player import RobotPlayer
 from .src.state_rest import RestState
@@ -37,12 +38,11 @@ class RobotRun(Node):
         self.timer = self.create_timer(self.loop_latency, self.robot_main_loop)
         self.last_time_print = time.time()
         self.get_logger().info('Robot Run node has started.')
-        
         self.feet_publisher = self.create_publisher(
-            Float32MultiArray,
-            'target_angle_msg',
+            JointState,
+            '/target_angle_msg',
             10)
-
+        
         self.cmd = self.create_subscription(
             Twist,
             'cmd_vel',
@@ -79,7 +79,6 @@ class RobotRun(Node):
         if not (self.cmd_received):
             self.cmd_received = True
 
-
     def listener_status_callback(self, msg):
         self.kill_flag = msg.data[0]
         self.rest_flag = msg.data[1]
@@ -111,22 +110,21 @@ class RobotRun(Node):
         }   
 
     def publishAngleTopic(self):    
-        fr_angles = np.array([0.0 , -0.785 , 1.57])
-        fl_angles = np.array([0.0 , -0.785 , 1.57])
-        br_angles = np.array([0.0 ,  0.785 , -1.57])
-        bl_angles = np.array([0.0 ,  0.785 , -1.57])
-        angles = np.concatenate((fr_angles, fl_angles, br_angles, bl_angles))
-
         #self.get_logger().info('angle type:' + str(type(self.robot_player.body.joint_angles)))
-        for i in range(len(fr_angles)):
-            angles[i] = self.robot_player.body.joint_angles[0,i]* 360.0 / (2 * 3.1415)
-            angles[3+i] = self.robot_player.body.joint_angles[1,i]* 360.0 / (2 * 3.1415)
-            angles[6+i] = self.robot_player.body.joint_angles[2,i]* 360.0 / (2 * 3.1415)
-            angles[9+i] = self.robot_player.body.joint_angles[3,i]* 360.0 / (2 * 3.1415)
+        joint_state = JointState()
+        joint_state.header = Header()
+        joint_state.header.stamp = self.get_clock().now().to_msg()
 
-        msg = Float32MultiArray()
-        msg.data = angles.astype(np.float32).tolist()
-        self.feet_publisher.publish(msg)
+        # name of the joints (they must be the same as URDF)
+        joint_state.name = ['coxaF_FR', 'femurF_FR', 'tibiaF_FR',
+                            'coxaF_FL', 'femurF_FL', 'tibiaF_FL',
+                            'coxaF_BR', 'femurF_BR', 'tibiaF_BR',
+                            'coxaF_BL', 'femurF_BL', 'tibiaF_BL']
+        joint_state.position = [self.robot_player.body.joint_angles[0,0]*180.0/3.1415, self.robot_player.body.joint_angles[0,1]*180.0/3.1415, self.robot_player.body.joint_angles[0,2]*180.0/3.1415,
+                                self.robot_player.body.joint_angles[1,0]*180.0/3.1415, self.robot_player.body.joint_angles[1,1]*180.0/3.1415, self.robot_player.body.joint_angles[1,2]*180.0/3.1415,
+                                self.robot_player.body.joint_angles[2,0]*180.0/3.1415, self.robot_player.body.joint_angles[2,1]*180.0/3.1415, self.robot_player.body.joint_angles[2,2]*180.0/3.1415,
+                                self.robot_player.body.joint_angles[3,0]*180.0/3.1415, self.robot_player.body.joint_angles[3,1]*180.0/3.1415, self.robot_player.body.joint_angles[3,2]*180.0/3.1415]
+        self.feet_publisher.publish(joint_state)
 
     def clear(self):
         # for windows
