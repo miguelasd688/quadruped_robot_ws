@@ -18,6 +18,6 @@ private:
   float femurTendon = 24.0;
 
 public:
-  struct LegsAngle CalculateRobotAngles(struct LegsAngle targetAngles);
+  LegsAngle CalculateRobotAngles(LegsAngle targetAngles);
   struct AngleVector CalculateLegAngles(struct AngleVector anglesIK);
 };
