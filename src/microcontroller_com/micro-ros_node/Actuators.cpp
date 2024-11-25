@@ -13,7 +13,7 @@ void Actuators::SetNewServo(uint32_t pin) {
   pinMode(pin, OUTPUT);
 }
 
-bool Actuators::StepMotors(bool RUN, bool SAFE, struct LegsAngle targetAngles) {
+bool Actuators::StepMotors(bool RUN, bool SAFE, LegsAngle targetAngles) {
   //----------------if safe is already False, mantein servos in last position--------
   if (RUN == true) {
     targetAngles = IK.CalculateRobotAngles(targetAngles);

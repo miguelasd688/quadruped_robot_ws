@@ -60,7 +60,7 @@ public:
   void ServoWrite(uint32_t pin , float angle);
   float CheckLimits(float angle , float lowLim , float highLim);
   void MoveServos();
-  bool StepMotors(bool RUN, bool SAFE, struct LegsAngle targetAngles);
+  bool StepMotors(bool RUN, bool SAFE, LegsAngle targetAngles);
 };
 
 #endif
