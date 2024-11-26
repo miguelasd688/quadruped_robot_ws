@@ -65,7 +65,7 @@ class RobotPlayer(StatesManager):
 
 
     def robotResting(self):
-        self.body.to_feet = self.body_to_feet_rest
+        self.body.to_feet = self.body_to_feet_rest.copy()
         self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0, 
                                                                           self.position0, 
                                                                           self.body.to_feet)
@@ -73,7 +73,7 @@ class RobotPlayer(StatesManager):
 
     def standUpMove(self):
         move_done = False
-        self.body.to_feet, move_done = self.controller.updateStandUp(self.body_to_feet0.copy())
+        self.body.to_feet, move_done = self.controller.updateStandUp(self.body_to_feet0)
         self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0, 
                                                                                self.position0, 
                                                                                self.body.to_feet)
@@ -88,7 +88,7 @@ class RobotPlayer(StatesManager):
         return move_done
 
     def staticControl(self):
-        self.body.to_feet = self.body_to_feet0 # Static position.
+        self.body.to_feet = self.body_to_feet0.copy() # Static position.
         self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0 + self.body.orientation, 
                                                                           self.position0 + self.body.position, 
                                                                           self.body.to_feet)
@@ -104,4 +104,3 @@ class RobotPlayer(StatesManager):
         self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0 + self.body.orientation, 
                                                                           self.position0 + self.body.position, 
                                                                           self.body.to_feet)
-        #pulsesCommand = angleToPulse.convert(self.body.joint_angles)

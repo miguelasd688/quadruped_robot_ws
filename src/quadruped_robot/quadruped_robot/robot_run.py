@@ -40,7 +40,7 @@ class RobotRun(Node):
         self.get_logger().info('Robot Run node has started.')
         self.feet_publisher = self.create_publisher(
             JointState,
-            '/target_angle_msg',
+            'target_angle_msg',
             10)
         
         self.cmd = self.create_subscription(
@@ -120,10 +120,10 @@ class RobotRun(Node):
                             'coxaF_FL', 'femurF_FL', 'tibiaF_FL',
                             'coxaF_BR', 'femurF_BR', 'tibiaF_BR',
                             'coxaF_BL', 'femurF_BL', 'tibiaF_BL']
-        joint_state.position = [self.robot_player.body.joint_angles[0,0]*180.0/3.1415, self.robot_player.body.joint_angles[0,1]*180.0/3.1415, self.robot_player.body.joint_angles[0,2]*180.0/3.1415,
-                                self.robot_player.body.joint_angles[1,0]*180.0/3.1415, self.robot_player.body.joint_angles[1,1]*180.0/3.1415, self.robot_player.body.joint_angles[1,2]*180.0/3.1415,
-                                self.robot_player.body.joint_angles[2,0]*180.0/3.1415, self.robot_player.body.joint_angles[2,1]*180.0/3.1415, self.robot_player.body.joint_angles[2,2]*180.0/3.1415,
-                                self.robot_player.body.joint_angles[3,0]*180.0/3.1415, self.robot_player.body.joint_angles[3,1]*180.0/3.1415, self.robot_player.body.joint_angles[3,2]*180.0/3.1415]
+        joint_state.position = [self.robot_player.body.joint_angles[0,0], self.robot_player.body.joint_angles[0,1], self.robot_player.body.joint_angles[0,2],
+                                self.robot_player.body.joint_angles[1,0], self.robot_player.body.joint_angles[1,1], self.robot_player.body.joint_angles[1,2],
+                                self.robot_player.body.joint_angles[2,0], self.robot_player.body.joint_angles[2,1], self.robot_player.body.joint_angles[2,2],
+                                self.robot_player.body.joint_angles[3,0], self.robot_player.body.joint_angles[3,1], self.robot_player.body.joint_angles[3,2]]
         self.feet_publisher.publish(joint_state)
 
     def clear(self):
