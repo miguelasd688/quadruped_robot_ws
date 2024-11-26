@@ -100,8 +100,8 @@ void PublishIMUSensorData()
   imu_msg.orientation.y = imuSensor.GetRoll();
   imu_msg.orientation.z = imuSensor.GetYaw();
   imu_msg.linear_acceleration.x = imuSensor.GetXacc();
-  imu_msg.linear_acceleration.y = imuSensor.GetXacc();
-  imu_msg.linear_acceleration.z = imuSensor.GetXacc();
+  imu_msg.linear_acceleration.y = imuSensor.GetYacc();
+  imu_msg.linear_acceleration.z = imuSensor.GetZacc();
   rcl_publish(&imu_publisher, &imu_msg, NULL);
 }
 
@@ -148,29 +148,65 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
 
 void subscription_callback(const void * msgin)
 {  
-  const sensor_msgs__msg__JointState * angles_msg = (const sensor_msgs__msg__JointState *)msgin;
-  if (angles_msg != NULL)
+  const sensor_msgs__msg__JointState * incoming_angles_msg = (const sensor_msgs__msg__JointState *)msgin;
+  if (incoming_angles_msg != NULL)
   {
     if (!isRunning)
     {
       RUN = true;
       isRunning = true;
     }
-    
     for (int i = 0; i < numJoint; i++)
     {
-      anglesIK.asArray[i] = angles_msg->position.data[i];
+      anglesIK.asArray[i] = incoming_angles_msg->position.data[i];
       anglesIK.asArray[i] = rad2deg(anglesIK.asArray[i]);
     }
     SAFE = actuators.StepMotors(RUN, SAFE, anglesIK);
   }
 }
 
+void InitTargetAngleMsg()
+{
+  sensor_msgs__msg__JointState__init(&angles_msg);
+  angles_msg.name.size = numJoint;
+  angles_msg.name.capacity = numJoint;
+  angles_msg.name.data = (rosidl_runtime_c__String *)malloc(numJoint * sizeof(rosidl_runtime_c__String));
+  for (int i = 0; i < numJoint; i++) {
+    angles_msg.name.data[i].data = (char *)malloc(strlen(jointNames[i]) + 1);
+    angles_msg.name.data[i].capacity = strlen(jointNames[i]) + 1;
+    strcpy(angles_msg.name.data[i].data, jointNames[i]);
+    angles_msg.name.data[i].size = strlen(jointNames[i]);
+  }
+  angles_msg.position.size = numJoint;
+  angles_msg.position.capacity = numJoint;
+  angles_msg.position.data = (double *)malloc(numJoint * sizeof(double));
+}
+
+void InitEncodersAngleMsg()
+{
+  sensor_msgs__msg__JointState__init(&encoders_msg);
+  encoders_msg.name.size = numJoint;
+  encoders_msg.name.capacity = numJoint;
+  encoders_msg.name.data = (rosidl_runtime_c__String *)malloc(numJoint * sizeof(rosidl_runtime_c__String));
+  for (int i = 0; i < numJoint; i++) {
+    
+  encoders_msg.name.data[i].data = (char *)malloc(strlen(jointNames[i]) + 1);
+    
+  encoders_msg.name.data[i].capacity = strlen(jointNames[i]) + 1;
+    strcpy(
+      encoders_msg.name.data[i].data, jointNames[i]);
+    
+  encoders_msg.name.data[i].size = strlen(jointNames[i]);
+  }
+  encoders_msg.position.size = numJoint;
+  encoders_msg.position.capacity = numJoint;
+  encoders_msg.position.data = (double *)malloc(numJoint * sizeof(double));
+}
+
 // Functions create_entities and destroy_entities can take several seconds.
 // In order to reduce this rebuild the library with
 // - RMW_UXRCE_ENTITY_CREATION_DESTROY_TIMEOUT=0
 // - UCLIENT_MAX_SESSION_CONNECTION_ATTEMPTS=3
-
 bool create_entities()
 {
   allocator = rcl_get_default_allocator();
@@ -187,10 +223,7 @@ bool create_entities()
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, JointState),
     "target_angle_msg"));
-  sensor_msgs__msg__JointState__init(&angles_msg);
-  angles_msg.position.size = numJoint;
-  angles_msg.position.capacity = numJoint;
-  angles_msg.position.data = (double *)malloc(numJoint * sizeof(double));
+  InitTargetAngleMsg();
 
   // create imu publisher
   RCCHECK(rclc_publisher_init_best_effort(
@@ -205,19 +238,7 @@ bool create_entities()
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, JointState),
     "encoders_sensor_msg"));
-  sensor_msgs__msg__JointState__init(&encoders_msg);
-  encoders_msg.name.size = numJoint;
-  encoders_msg.name.capacity = numJoint;
-  encoders_msg.name.data = (rosidl_runtime_c__String *)malloc(numJoint * sizeof(rosidl_runtime_c__String));
-  for (int i = 0; i < numJoint; i++) {
-    encoders_msg.name.data[i].data = (char *)malloc(strlen(jointNames[i]) + 1);
-    encoders_msg.name.data[i].capacity = strlen(jointNames[i]) + 1;
-    strcpy(encoders_msg.name.data[i].data, jointNames[i]);
-    encoders_msg.name.data[i].size = strlen(jointNames[i]);
-  }
-  encoders_msg.position.size = numJoint;
-  encoders_msg.position.capacity = numJoint;
-  encoders_msg.position.data = (double *)malloc(numJoint * sizeof(double));
+  InitEncodersAngleMsg();
 
   // create battery status publisher
   RCCHECK(rclc_publisher_init_best_effort(
@@ -268,7 +289,7 @@ void destroy_entities()
   (void) rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
 
   free(status_msg.data.data);
-  free(angles_msg.position.data);
+  //free(angles_msg.position.data);
   CleanupEncodersMsg();
 
   rcl_publisher_fini(&status_publisher, &node);
