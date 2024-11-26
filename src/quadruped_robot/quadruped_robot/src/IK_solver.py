@@ -61,8 +61,8 @@ def legs_IK(FRcoord , FLcoord , BRcoord , BLcoord , coxa , femur , tibia , kneeC
     BL_angles = IK(BLcoord , -coxa , femur , tibia , signBack)
     
     return np.array([[FR_angles[0],FR_angles[1],FR_angles[2]],
-                      [FL_angles[0],FL_angles[1],FL_angles[2]],
-                      [BR_angles[0],BR_angles[1],BR_angles[2]],
-                      [BL_angles[0],BL_angles[1],BL_angles[2]]])
+                     [FL_angles[0],FL_angles[1],FL_angles[2]],
+                     [BR_angles[0],BR_angles[1],BR_angles[2]],
+                     [BL_angles[0],BL_angles[1],BL_angles[2]]])
     
     

@@ -141,7 +141,7 @@ class RobotRun(Node):
             self.get_logger().info('')
             self.get_logger().info('robot run (Robot armed)____________fps: '+ str(1.0/latency))
             self.get_logger().info('')
-            self.get_logger().info('fr: ' + str(self.robot_player.body.to_feet[0,:]))
+            self.get_logger().info('feet: ' + str(self.robot_player.body.to_feet))
                                    
     def robot_main_loop(self):
         if not (self.cmd_received and self.status_received):

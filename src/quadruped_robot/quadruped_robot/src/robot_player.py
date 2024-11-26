@@ -13,9 +13,9 @@ from .states_manager import StatesManager
 
 class RobotStateVariables:
     def __init__(self, body_to_feet_rest, orientation0, position0):
-        self.to_feet = body_to_feet_rest
-        self.orientation = orientation0
-        self.position = position0
+        self.to_feet = body_to_feet_rest.copy()
+        self.orientation = orientation0.copy()
+        self.position = position0.copy()
         self.linear_velocity = 0.
         self.linear_angle = 0.
         self.angular_velocity = 0.
@@ -23,7 +23,7 @@ class RobotStateVariables:
         angles , self.to_feet = self.kinematics.solve(orientation0, 
                                        position0, 
                                        body_to_feet_rest)
-        self.joint_angles = np.zeros([4,3])
+        self.joint_angles = angles.copy()
         
 
 
