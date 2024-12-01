@@ -38,6 +38,9 @@ public:
     float GetYaw();
     float GetPitch();
     float GetRoll();
+    float GetXacc();
+    float GetYacc();
+    float GetZacc();
 
 private:
     Adafruit_BNO055 bno;

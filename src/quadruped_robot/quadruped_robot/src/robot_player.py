@@ -9,14 +9,13 @@ from sys import exit
 from . import move_controller
 from . import kinematic_model
 from . import gait_planner
-from . import angleToPulse
 from .states_manager import StatesManager
 
 class RobotStateVariables:
     def __init__(self, body_to_feet_rest, orientation0, position0):
-        self.to_feet = body_to_feet_rest
-        self.orientation = orientation0
-        self.position = position0
+        self.to_feet = body_to_feet_rest.copy()
+        self.orientation = orientation0.copy()
+        self.position = position0.copy()
         self.linear_velocity = 0.
         self.linear_angle = 0.
         self.angular_velocity = 0.
@@ -24,7 +23,7 @@ class RobotStateVariables:
         angles , self.to_feet = self.kinematics.solve(orientation0, 
                                        position0, 
                                        body_to_feet_rest)
-        self.joint_angles = np.zeros([4,3])
+        self.joint_angles = angles.copy()
         
 
 
@@ -56,15 +55,6 @@ class RobotPlayer(StatesManager):
         
         self.controller = move_controller.MoveController(self.body, self.loop_latency)
 
-
-    def setDesiredStateVariables(self, robot_desired_states: dict):
-        self.body.orientation = robot_desired_states['com_orientation']
-        self.body.position = robot_desired_states['com_position']
-        self.body.linear_velocity = robot_desired_states['linear_velocity']
-        self.body.linear_angle = robot_desired_states['linear_angle']
-        self.body.angular_velocity = robot_desired_states['angular_velocity']
-
-
     def killProgram(self):
         print("Reseting microcontroller and closing...")
         time.sleep(0.4)
@@ -75,7 +65,7 @@ class RobotPlayer(StatesManager):
 
 
     def robotResting(self):
-        self.body.to_feet = self.body_to_feet_rest
+        self.body.to_feet = self.body_to_feet_rest.copy()
         self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0, 
                                                                           self.position0, 
                                                                           self.body.to_feet)
@@ -83,7 +73,7 @@ class RobotPlayer(StatesManager):
 
     def standUpMove(self):
         move_done = False
-        self.body.to_feet, move_done = self.controller.updateStandUp(self.body_to_feet0.copy())
+        self.body.to_feet, move_done = self.controller.updateStandUp(self.body_to_feet0)
         self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0, 
                                                                                self.position0, 
                                                                                self.body.to_feet)
@@ -98,7 +88,7 @@ class RobotPlayer(StatesManager):
         return move_done
 
     def staticControl(self):
-        self.body.to_feet = self.body_to_feet0 # Static position.
+        self.body.to_feet = self.body_to_feet0.copy() # Static position.
         self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0 + self.body.orientation, 
                                                                           self.position0 + self.body.position, 
                                                                           self.body.to_feet)
@@ -114,4 +104,3 @@ class RobotPlayer(StatesManager):
         self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0 + self.body.orientation, 
                                                                           self.position0 + self.body.position, 
                                                                           self.body.to_feet)
-        #pulsesCommand = angleToPulse.convert(self.body.joint_angles)

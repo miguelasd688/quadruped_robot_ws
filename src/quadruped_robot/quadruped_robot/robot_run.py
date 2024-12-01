@@ -6,10 +6,10 @@ from os import system, name
 
 import rclpy
 from rclpy.node import Node
-from robot_interfaces.msg import Commands
-from robot_interfaces.msg import RobotStatus
-from robot_interfaces.msg import JointAngles
-from std_msgs.msg import Float32MultiArray
+from geometry_msgs.msg import Twist
+from std_msgs.msg import Int8MultiArray
+from sensor_msgs.msg import JointState
+from std_msgs.msg import Header
 
 from .src.robot_player import RobotPlayer
 from .src.state_rest import RestState
@@ -38,37 +38,52 @@ class RobotRun(Node):
         self.timer = self.create_timer(self.loop_latency, self.robot_main_loop)
         self.last_time_print = time.time()
         self.get_logger().info('Robot Run node has started.')
+        self.feet_publisher = self.create_publisher(
+            JointState,
+            'target_angle_msg',
+            10)
         
-        self.feet_publisher = self.create_publisher(Float32MultiArray, '/target_angle_msg', 10)
-
         self.cmd = self.create_subscription(
-            Commands,
-            'controller_command',
+            Twist,
+            'cmd_vel',
             self.listener_cmd_callback,
             100)
+        self.cmd = self.create_subscription(
+            Twist,
+            'com_state',
+            self.listener_com_callback,
+            100)
         self.status = self.create_subscription(
-            RobotStatus,
+            Int8MultiArray,
             'controller_status',
             self.listener_status_callback,
             100)
         self.subscriptions  # prevent unused variable warning
 
+    def listener_com_callback(self, msg):
+        self.robot_player.body.position[0] = msg.linear.x
+        self.robot_player.body.position[1] = msg.linear.y
+        self.robot_player.body.position[2] = msg.linear.z
+        self.robot_player.body.orientation[0] = msg.angular.x
+        self.robot_player.body.orientation[1] = msg.angular.y
+        self.robot_player.body.orientation[2] = msg.angular.z
 
-    def listener_cmd_callback(self, msg):
-        self.linear_velocity = msg.linear_velocity
-        self.linear_angle = msg.linear_angle
-        self.angular_velocity = msg.angular_velocity
-        self.com_position = msg.com_position  
-        self.com_orientation = msg.com_orientation 
         if not (self.cmd_received):
             self.cmd_received = True
 
+    def listener_cmd_callback(self, msg):
+        self.robot_player.body.linear_velocity = msg.linear.x
+        self.robot_player.body.linear_angle = msg.linear.y
+        self.robot_player.body.angular_velocity = msg.angular.z
+
+        if not (self.cmd_received):
+            self.cmd_received = True
 
     def listener_status_callback(self, msg):
-        self.kill_flag = msg.kill_flag
-        self.rest_flag = msg.rest_flag
-        self.compliant_mode = msg.compliant_mode
-        self.pose_mode = msg.pose_mode  
+        self.kill_flag = msg.data[0]
+        self.rest_flag = msg.data[1]
+        self.pose_mode = msg.data[2]
+        self.compliant_mode = msg.data[3]
         if not (self.status_received):
             self.status_received = True
 
@@ -92,39 +107,24 @@ class RobotRun(Node):
             'gait_offset0': self.get_parameter('gait_offset0').get_parameter_value().double_array_value,
             'step_period0': self.get_parameter('step_period0').get_parameter_value().double_value,
             'loop_latency': self.get_parameter('loop_latency').get_parameter_value().double_value
-        }
-    
-    
-
-
-
-    def robotDesiredStates(self):
-        return {
-            'com_position': self.com_position,
-            'com_orientation': self.com_orientation,
-            'linear_velocity': self.linear_velocity,
-            'linear_angle': self.linear_angle,
-            'angular_velocity': self.angular_velocity
-        }
-    
+        }   
 
     def publishAngleTopic(self):    
-        fr_angles = np.array([0.0 , -0.785 , 1.57])
-        fl_angles = np.array([0.0 , -0.785 , 1.57])
-        br_angles = np.array([0.0 ,  0.785 , -1.57])
-        bl_angles = np.array([0.0 ,  0.785 , -1.57])
-        angles = np.concatenate((fr_angles, fl_angles, br_angles, bl_angles))
-
         #self.get_logger().info('angle type:' + str(type(self.robot_player.body.joint_angles)))
-        for i in range(len(fr_angles)):
-            angles[i] = self.robot_player.body.joint_angles[0,i]* 360.0 / (2 * 3.1415)
-            angles[3+i] = self.robot_player.body.joint_angles[1,i]* 360.0 / (2 * 3.1415)
-            angles[6+i] = self.robot_player.body.joint_angles[2,i]* 360.0 / (2 * 3.1415)
-            angles[9+i] = self.robot_player.body.joint_angles[3,i]* 360.0 / (2 * 3.1415)
+        joint_state = JointState()
+        joint_state.header = Header()
+        joint_state.header.stamp = self.get_clock().now().to_msg()
 
-        msg = Float32MultiArray()
-        msg.data = angles.astype(np.float32).tolist()
-        self.feet_publisher.publish(msg)
+        # name of the joints (they must be the same as URDF)
+        joint_state.name = ['coxaF_FR', 'femurF_FR', 'tibiaF_FR',
+                            'coxaF_FL', 'femurF_FL', 'tibiaF_FL',
+                            'coxaF_BR', 'femurF_BR', 'tibiaF_BR',
+                            'coxaF_BL', 'femurF_BL', 'tibiaF_BL']
+        joint_state.position = [self.robot_player.body.joint_angles[0,0], self.robot_player.body.joint_angles[0,1], self.robot_player.body.joint_angles[0,2],
+                                self.robot_player.body.joint_angles[1,0], self.robot_player.body.joint_angles[1,1], self.robot_player.body.joint_angles[1,2],
+                                self.robot_player.body.joint_angles[2,0], self.robot_player.body.joint_angles[2,1], self.robot_player.body.joint_angles[2,2],
+                                self.robot_player.body.joint_angles[3,0], self.robot_player.body.joint_angles[3,1], self.robot_player.body.joint_angles[3,2]]
+        self.feet_publisher.publish(joint_state)
 
     def clear(self):
         # for windows
@@ -141,7 +141,7 @@ class RobotRun(Node):
             self.get_logger().info('')
             self.get_logger().info('robot run (Robot armed)____________fps: '+ str(1.0/latency))
             self.get_logger().info('')
-            self.get_logger().info('fr: ' + str(self.robot_player.body.to_feet[0,:]))
+            self.get_logger().info('feet: ' + str(self.robot_player.body.to_feet))
                                    
     def robot_main_loop(self):
         if not (self.cmd_received and self.status_received):
@@ -150,13 +150,10 @@ class RobotRun(Node):
         if not (self.armed):
             self.armed = True
             
-
         loop_time = time.time() - self.last_time
         self.last_time = time.time()
         self.t = time.time() - self.start_time
         self.printInformation(loop_time)
-        
-        self.robot_player.setDesiredStateVariables(self.robotDesiredStates())
         
         if (self.kill_flag):
             self.robot_player.updateKill()

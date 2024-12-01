@@ -27,11 +27,6 @@ source install/local_setup.bash
     From _joystick.py_, it reads wireless gamepad
   * ros2_node: _keyboard_teleop.py_
     TODO: to control robot with any keyboard
-* robot_interfaces
-  * msg/Commasds.msg
-  * msg/RobotStatus.msg
-  * msg/JointAngles.msg
-    custom topics to communicate between the nodes of the robot.
 * micro-ros w/ Teensy 4.1
   * https://micro.ros.org/docs/tutorials/core/teensy_with_arduino/
 

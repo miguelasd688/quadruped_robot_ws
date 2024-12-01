@@ -34,7 +34,7 @@ void IMUSensor::ReadData() {
   //could add VECTOR_ACCELEROMETER, VECTOR_MAGNETOMETER,VECTOR_GRAVITY...
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   //bno.getEvent(&angVelocityData, Adafruit_BNO055::VECTOR_GYROSCOPE);
-  //bno.getEvent(&linearAccelData, Adafruit_BNO055::VECTOR_LINEARACCEL);
+  bno.getEvent(&linearAccelData, Adafruit_BNO055::VECTOR_LINEARACCEL);
   //bno.getEvent(&magnetometerData, Adafruit_BNO055::VECTOR_MAGNETOMETER);
   //bno.getEvent(&accelerometerData, Adafruit_BNO055::VECTOR_ACCELEROMETER);
   //bno.getEvent(&gravityData, Adafruit_BNO055::VECTOR_GRAVITY);
@@ -50,6 +50,18 @@ float IMUSensor::GetRoll() {
   return orientationData.orientation.z;
 }
 
+float IMUSensor::GetXacc()
+{
+  return linearAccelData.acceleration.x;
+}
+float IMUSensor::GetYacc()
+{
+  return linearAccelData.acceleration.y;
+}
+float IMUSensor::GetZacc()
+{
+  return linearAccelData.acceleration.z;
+}
 
 
 

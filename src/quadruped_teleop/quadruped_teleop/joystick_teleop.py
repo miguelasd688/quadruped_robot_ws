@@ -7,18 +7,16 @@ from os import system, name
 
 from . import joystick as joy
 
-from robot_interfaces.msg import Commands
-from robot_interfaces.msg import RobotStatus
-
-
-
+from geometry_msgs.msg import Twist
+from std_msgs.msg import Int8MultiArray
 
 class PS5Controller(Node):
 
     def __init__(self):
         super().__init__('joystick_teleop')
-        self.cmd_publisher = self.create_publisher(Commands, 'controller_command', 10)
-        self.status_publisher = self.create_publisher(RobotStatus, 'controller_status', 10)
+        self.cmd_publisher = self.create_publisher(Twist, 'cmd_vel', 10)
+        self.com_state_publisher = self.create_publisher(Twist, 'com_state', 10)
+        self.status_publisher = self.create_publisher(Int8MultiArray, 'controller_status', 10)
         self.timer = self.create_timer(0.01, self.read_joystick)
         
         self.declare_parameter('device_events', '')
@@ -42,22 +40,31 @@ class PS5Controller(Node):
 
 
     def publishCommands(self):
-        cmd = Commands()
-        cmd.linear_velocity = self.inputs.linear_velocity
-        cmd.linear_angle = self.inputs.linear_angle
-        cmd.angular_velocity = self.inputs.angular_velocity
-        cmd.com_position = self.inputs.com_pos
-        cmd.com_orientation = self.inputs.com_orn
-        self.cmd_publisher.publish(cmd)
+        cmd_vel = Twist()
+        cmd_vel.linear.x = self.inputs.linear_velocity
+        cmd_vel.linear.y = self.inputs.linear_angle
+        cmd_vel.angular.z = self.inputs.angular_velocity
+        self.cmd_publisher.publish(cmd_vel)
+
+        com_state = Twist()
+        com_state.linear.x = self.inputs.com_pos[0]
+        com_state.linear.y = self.inputs.com_pos[1]
+        com_state.linear.z = self.inputs.com_pos[2]
+        com_state.angular.x = self.inputs.com_orn[0]
+        com_state.angular.y = self.inputs.com_orn[1]
+        com_state.angular.z = self.inputs.com_orn[2]
+        self.com_state_publisher.publish(com_state)
 
 
     def publishStatus(self):
-        status = RobotStatus()
-        status.rest_flag = self.inputs.rest_mode
-        status.kill_flag = self.inputs.kill
-        status.pose_mode = self.inputs.pose_mode
-        status.compliant_mode = self.inputs.compliant_mode
-        self.status_publisher.publish(status)
+        status_msg = Int8MultiArray()
+        status_msg.data = [
+            int(self.inputs.kill),            # Kill flag
+            int(self.inputs.rest_mode),       # Rest flag
+            int(self.inputs.pose_mode),       # Pose mode
+            int(self.inputs.compliant_mode)   # Compliant mode
+        ]
+        self.status_publisher.publish(status_msg)
 
 
     def clear(self):

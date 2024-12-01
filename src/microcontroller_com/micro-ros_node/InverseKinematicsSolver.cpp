@@ -1,7 +1,7 @@
 #include "InverseKinematicsSolver.h"
 
 
-struct LegsAngle InverseKinematicsSolver::CalculateRobotAngles(struct LegsAngle targetAngles)
+LegsAngle InverseKinematicsSolver::CalculateRobotAngles(LegsAngle targetAngles)
 {
   targetAngles.FR = CalculateLegAngles(targetAngles.FR);
   targetAngles.FL = CalculateLegAngles(targetAngles.FL);

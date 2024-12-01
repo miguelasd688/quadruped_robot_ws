@@ -1,5 +1,5 @@
 
-from .move_feet import moveFeetZ , moveFeetTo 
+from .feet_mover import FeetMover
 
 class MoveController():
     #robot Controller to generate secuence of movements
@@ -12,10 +12,11 @@ class MoveController():
         self.start_body_to_feet = self.body.to_feet.copy()
     
     #set start_body_to_feet
-    def initAction(self):
+    def initAction(self, desired_body_to_feet, n_iterations):
         if(self.movement_iterations < 1):
             print('    |__|__init new secuence')
             self.start_body_to_feet = self.body.to_feet.copy()
+            self.feetMover = FeetMover(self.start_body_to_feet, desired_body_to_feet, n_iterations)
 
     # reset iteractor and set next action
     def nextAction(self, action, n_iterations):
@@ -27,14 +28,14 @@ class MoveController():
     def updateMovement(self, end_body_to_feet, action, n_iterations):
         if (action == self.actions['heigh_set']):
             if (self.movement_iterations < n_iterations):
-                self.body.to_feet = moveFeetZ(self.body.to_feet, self.start_body_to_feet , end_body_to_feet , n_iterations, self.movement_iterations)
+                self.body.to_feet = self.feetMover.moveFeetZ(self.body.to_feet, self.movement_iterations)
                 #print('    |__|__|__Setting robot height')
                 #print(f'foot: {self.body.to_feet[0,:]} start: {self.start_body_to_feet[0,:]} | it: {self.movement_iterations} of {n_iterations}')
                 self.movement_iterations += 1
         elif (action == self.actions['feet_place']):
             h = 0.06
             if (self.movement_iterations < n_iterations):
-                self.body.to_feet = moveFeetTo(self.body.to_feet, self.start_body_to_feet , end_body_to_feet , h , n_iterations, self.movement_iterations)
+                self.body.to_feet = self.feetMover.moveFeetTo(self.body.to_feet, self.start_body_to_feet, h , n_iterations, self.movement_iterations)
                 #print('    |__|__|__Placing feet to new position')
                 #print(f'foot: {self.body.to_feet[0,:]} start: {self.start_body_to_feet[0,:]} | it: {self.movement_iterations} of {n_iterations}')
                 self.movement_iterations += 1
@@ -53,14 +54,14 @@ class MoveController():
         if (self.action_now == self.actions['heigh_set']):
             move_time = 1
             n_iterations = int(move_time/self.loop_latency)
-            self.initAction()
+            self.initAction(desired_body_to_feet, n_iterations)
             self.updateMovement(desired_body_to_feet, self.action_now, n_iterations)
             self.nextAction(self.actions['feet_place'], n_iterations)
         
         if (self.action_now == self.actions['feet_place']):          
-            move_time = 0.4
+            move_time = 1
             n_iterations = int(move_time/self.loop_latency)
-            self.initAction()
+            self.initAction(desired_body_to_feet, n_iterations)
             self.updateMovement(desired_body_to_feet, self.action_now, n_iterations)
             self.nextAction(self.actions['end'], n_iterations)
 
@@ -79,14 +80,14 @@ class MoveController():
         if (self.action_now == self.actions['feet_place']):
             move_time = 0.4
             n_iterations = int(move_time/self.loop_latency)
-            self.initAction()
+            self.initAction(desired_body_to_feet, n_iterations)
             self.updateMovement(desired_body_to_feet, self.action_now, n_iterations)
             self.nextAction(self.actions['heigh_set'], n_iterations)
         
         elif (self.action_now == self.actions['heigh_set']):
             move_time = 1
             n_iterations = int(move_time/self.loop_latency)
-            self.initAction()
+            self.initAction(desired_body_to_feet, n_iterations)
             self.updateMovement(desired_body_to_feet, self.action_now, n_iterations)
             self.nextAction(self.actions['end'], n_iterations)
             

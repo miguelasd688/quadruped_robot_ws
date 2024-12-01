@@ -12,7 +12,19 @@ Subscriptors:
 
 * For servomotors angles, you can directly publish to debug motor positions.
   ```
-  ros2 topic pub /target_angle_msg std_msgs/msg/Float32MultiArray data:\ [0,-45,90,0,-45,90,0,45,-90,0,45,-90]
+  ros2 topic pub /target_angle_msg sensor_msgs/msg/JointState "{
+  header: {
+    stamp: {
+      sec: 0,
+      nanosec: 0
+    },
+    frame_id: ''
+  },
+  name: ['coxaF_FR','femurF_FR','tibiaF_FR','coxaF_FL','femurF_FL','tibiaF_FL','coxaF_BR','femurF_BR','tibiaF_BR','coxaF_BL','femurF_BL','tibiaF_BL'],
+  position: [-0.09764862400364804,-0.9668976403947955,1.6978411651482412,0.07062227289543155,-0.9775772148200459,1.716632316236356,-0.09764862400364804,0.9668976403947955,-1.6978411651482412,0.07062227289543155,0.9775772148200459,-1.716632316236356],
+  velocity: [],
+  effort: []
+}"
   ```
 
 Publishers:
