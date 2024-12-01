@@ -1,15 +1,23 @@
 # Description
 
 This repo contains the code running on a quadruped robot.
-Ececuted with Raspberry Pi 4, Ubuntu 22
+Executed with Raspberry Pi 4, Ubuntu 20
 
 It is implemented with ROS2
 
+# Open de workspace
+
+* [Install Docker and VSCode.](https://docs.ros.org/en/humble/How-To-Guides/Setup-ROS-2-with-VSCode-and-Docker-Container.html)
+* 
+* Use `View->Command Palette...` or `Ctrl+Shift+P` to open the command palette. Search for the command `Dev Containers: Reopen in Container` and execute it. This will build your development docker container for your. 
+
 # From root workspace ROS 2 folder:
 
+```
 source /opt/ros/humble/setup.bash
 colcon build
 source install/local_setup.bash
+```
 
 # Packages:
 
