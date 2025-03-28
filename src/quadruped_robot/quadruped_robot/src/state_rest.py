@@ -21,6 +21,10 @@ class RestState(State):
             print("RestState staying in rest mode.")
         self._robotPlayer.robotResting()
 
+    def handleCalibration(self) -> None:
+        print("RestState handle going to CalibrationState. Going to StaticState first")
+        pass
+
     def handleStatic(self) -> None:
         if (self._robotPlayer.standUpMove()):
             print("RestState handles going to StaticState. Going StaticState")

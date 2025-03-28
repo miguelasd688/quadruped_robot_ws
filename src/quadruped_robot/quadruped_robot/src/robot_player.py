@@ -63,13 +63,17 @@ class RobotPlayer(StatesManager):
                                                                           self.body.to_feet)
         exit()
 
-
     def robotResting(self):
         self.body.to_feet = self.body_to_feet_rest.copy()
         self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0, 
-                                                                          self.position0, 
-                                                                          self.body.to_feet)
+                                                                               self.position0, 
+                                                                               self.body.to_feet)
 
+    def calibrationControl(self):
+        #self.body.to_feet = self.body_to_feet0.copy() # Static position.
+        self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0, 
+                                                                               self.position0, 
+                                                                               self.body.to_feet)
 
     def standUpMove(self):
         move_done = False
@@ -83,15 +87,15 @@ class RobotPlayer(StatesManager):
         move_done = False
         self.body.to_feet, move_done = self.controller.updateLayDown(self.body_to_feet_rest.copy())
         self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0, 
-                                                                          self.position0, 
-                                                                          self.body.to_feet)
+                                                                               self.position0, 
+                                                                               self.body.to_feet)
         return move_done
 
     def staticControl(self):
         self.body.to_feet = self.body_to_feet0.copy() # Static position.
         self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0 + self.body.orientation, 
-                                                                          self.position0 + self.body.position, 
-                                                                          self.body.to_feet)
+                                                                               self.position0 + self.body.position, 
+                                                                               self.body.to_feet)
 
 
     def dynamicControl(self):

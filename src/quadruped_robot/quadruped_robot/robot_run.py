@@ -33,6 +33,8 @@ class RobotRun(Node):
         self.t = time.time() - self.start_time
         self.last_time = self.t
         self.rest_flag = True
+        self.calibration_flag = False
+        self.is_calibration_done = False
         self.armed = False
 
         self.timer = self.create_timer(self.loop_latency, self.robot_main_loop)
@@ -48,10 +50,15 @@ class RobotRun(Node):
             'cmd_vel',
             self.listener_cmd_callback,
             100)
-        self.cmd = self.create_subscription(
+        self.com = self.create_subscription(
             Twist,
             'com_state',
             self.listener_com_callback,
+            100)
+        self.leg = self.create_subscription(
+            Twist,
+            'leg_calibration',
+            self.listener_leg_callback,
             100)
         self.status = self.create_subscription(
             Int8MultiArray,
@@ -79,11 +86,18 @@ class RobotRun(Node):
         if not (self.cmd_received):
             self.cmd_received = True
 
+    def listener_leg_callback(self, msg):
+        if (self.calibration_flag):
+            self.robot_player.body.to_feet[0,0] += msg.linear.y
+            self.robot_player.body.to_feet[0,1] += msg.linear.x
+            self.robot_player.body.to_feet[0,2] += msg.linear.z
+
     def listener_status_callback(self, msg):
         self.kill_flag = msg.data[0]
         self.rest_flag = msg.data[1]
-        self.pose_mode = msg.data[2]
-        self.compliant_mode = msg.data[3]
+        self.calibration_flag = msg.data[2]
+        self.pose_mode = msg.data[3]
+        self.compliant_mode = msg.data[4]
         if not (self.status_received):
             self.status_received = True
 
@@ -137,7 +151,7 @@ class RobotRun(Node):
     def printInformation(self, latency):
         if (time.time() - self.last_time_print >= 0.1):
             self.last_time_print = time.time()
-            self.clear()
+            #self.clear()
             self.get_logger().info('')
             self.get_logger().info('robot run (Robot armed)____________fps: '+ str(1.0/latency))
             self.get_logger().info('')
@@ -153,18 +167,22 @@ class RobotRun(Node):
         loop_time = time.time() - self.last_time
         self.last_time = time.time()
         self.t = time.time() - self.start_time
-        self.printInformation(loop_time)
+        #self.printInformation(loop_time)
         
         if (self.kill_flag):
             self.robot_player.updateKill()
         else:
-            if (self.rest_flag):
-                self.robot_player.updateRest()
-            else:
-                if (self.pose_mode):
-                    self.robot_player.updateStaticControl()
+            if (self.calibration_flag):
+                self.robot_player.updateCalibrationControl()
+            else:    
+                if (self.rest_flag):
+                    self.robot_player.updateRest()
                 else:
-                    self.robot_player.updateDynamicControl()
+                    if (self.pose_mode):
+                        self.robot_player.updateStaticControl()
+                    else:
+                        self.robot_player.updateDynamicControl()
+            
 
         self.publishAngleTopic()
         

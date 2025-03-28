@@ -6,6 +6,7 @@ Created on Mon Mar  9 14:05:02 2020
 @author: miguel-asd
 """
 
+import time
 import numpy as np
 
 from os import system, name
@@ -20,6 +21,7 @@ def Controller():
             'triangle': 307,
             'circle': 305,
             'square': 308,
+            'select': 314,
             'start': 315,
             'ps': 316,
             'r1': 311,
@@ -47,7 +49,10 @@ class RobotInputs:
         self.rest_mode = True
         self.com_pos = np.zeros(3)
         self.com_orn = np.zeros(3)
-        self.calibration = 0
+        self.calibration = False
+        self.calibration_increment_x = 0.0 # in meter
+        self.calibration_increment_y = 0.0 # in meter
+        self.calibration_increment_z = 0.0 # in meter
         self.heigth_increment = 0
     
 class RawValues:
@@ -77,6 +82,11 @@ class RawValues:
         self.circle=0
         self.square=0
 
+        self.calibration_start_time = 0.0
+        self.calibration_threshold = 1.5
+        self.calibration_increment = 0.00005 # in meter
+        self.is_select_pressed = False
+        self.calibration_threshold_triggered = False
 
 class Joystick:
 
@@ -139,17 +149,33 @@ class Joystick:
                                 elif self.inputs.rest_mode == True:
                                     self.inputs.rest_mode = False
                             elif event.code == Controller()['r1']:#R1
-                                self.raw.R1data += 0.0005
-                                
+                                if (self.inputs.calibration):
+                                    self.inputs.calibration_increment_z = self.raw.calibration_increment
+                                else:
+                                    self.raw.R1data += 0.0005
                             elif event.code == Controller()['l1']:#L1
-                                self.raw.L1data -= 0.0005
-                        else:
-                            pass
-                    ########################################  for my own joystick
+                                if (self.inputs.calibration):
+                                    self.inputs.calibration_increment_z = -self.raw.calibration_increment
+                                else:
+                                    self.raw.L1data -= 0.0005
+                            elif event.code == Controller()['select']:
+                                self.raw.is_select_pressed = True
+                                self.raw.calibration_threshold_triggered = False
+                                self.raw.calibration_start_time = time.time()
+                        elif event.value == 0:
+                            if event.code == Controller()['select']:
+                                self.raw.is_select_pressed = False
+                            elif event.code == Controller()['r1']:#R1
+                                if (self.inputs.calibration):
+                                    self.inputs.calibration_increment_z = 0.0
+                            elif event.code == Controller()['l1']:#L1
+                                if (self.inputs.calibration):
+                                    self.inputs.calibration_increment_z = 0.0
+                    #######################################  for my own joystick
                     #      ^           #     ^            #
                     #    ABS_Y         #    ABS_RY        #
-                    #  ←─────→ ABS_X #  ←─────→ ABS_RX   #
-                    #     ↓           #     ↓            #  
+                    #  ←─────→ ABS_X   #  ←─────→ ABS_RX  #
+                    #     ↓            #     ↓            #  
                     #######################################
                     elif event.type == ecodes.EV_ABS:
                         absevent = categorize(event)
@@ -168,16 +194,43 @@ class Joystick:
             
                         elif ecodes.bytype[absevent.event.type][absevent.event.code] == Controller()['arrow_x']:
                             if absevent.event.value == 1:#right arrow 
-                                self.inputs.step_period += 0.01
+                                if (self.inputs.calibration):
+                                    self.inputs.calibration_increment_x = self.raw.calibration_increment
+                                else:
+                                    self.inputs.step_period += 0.01
                             elif absevent.event.value == -1:#left arrow 
-                                self.inputs.step_period -= 0.01 
+                                if (self.inputs.calibration):
+                                    self.inputs.calibration_increment_x = -self.raw.calibration_increment
+                                else:
+                                    self.inputs.step_period -= 0.01 
+                            elif absevent.event.value == 0:
+                                if (self.inputs.calibration):
+                                    self.inputs.calibration_increment_x = 0.0
+
                         elif ecodes.bytype[absevent.event.type][absevent.event.code] == Controller()['arrow_y']:
                             if absevent.event.value == -1:#up arrow
-                                self.inputs.heigth_increment += 0.002
+                                if (self.inputs.calibration):
+                                    self.inputs.calibration_increment_y = self.raw.calibration_increment
+                                else:
+                                    self.inputs.heigth_increment += 0.002
                             elif absevent.event.value == 1:#down arrow
-                                self.inputs.heigth_increment -= 0.002
-                         
-            
+                                if (self.inputs.calibration):
+                                    self.inputs.calibration_increment_y = -self.raw.calibration_increment
+                                else:
+                                    self.inputs.heigth_increment -= 0.002
+                            elif absevent.event.value == 0:
+                                if (self.inputs.calibration):
+                                    self.inputs.calibration_increment_y = 0.0
+
+            if (self.raw.is_select_pressed):
+                if (self.raw.calibration_threshold_triggered == False):
+                    if ((time.time() - self.raw.calibration_start_time) >= self.raw.calibration_threshold):
+                        self.raw.calibration_threshold_triggered = True
+                        if (self.inputs.calibration):
+                            self.inputs.calibration = False
+                        else:
+                            self.inputs.calibration = True
+
             self.raw.l_joy[0] = self.raw.L3data[0]*0.1 + last_l_joy[0]*0.9
             self.raw.l_joy[1] = self.raw.L3data[1]*0.1 + last_l_joy[1]*0.9
             self.raw.r_joy[0] = self.raw.R3data[0]*0.1 + last_r_joy[0]*0.9
