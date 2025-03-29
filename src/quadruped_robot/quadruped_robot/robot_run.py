@@ -58,7 +58,7 @@ class RobotRun(Node):
         self.leg = self.create_subscription(
             Twist,
             'leg_calibration',
-            self.listener_leg_callback,
+            self.listener_leg_calibration_callback,
             100)
         self.status = self.create_subscription(
             Int8MultiArray,
@@ -86,22 +86,25 @@ class RobotRun(Node):
         if not (self.cmd_received):
             self.cmd_received = True
 
-    def listener_leg_callback(self, msg):
+    def listener_leg_calibration_callback(self, msg):
         if (self.calibration_flag):
-            self.robot_player.body.to_feet[0,0] += msg.linear.y
-            self.robot_player.body.to_feet[0,1] += msg.linear.x
-            self.robot_player.body.to_feet[0,2] += msg.linear.z
+            i = self.calibration_leg
+            self.robot_player.calibration_body.to_feet[i,0] += msg.linear.y
+            self.robot_player.calibration_body.to_feet[i,1] += msg.linear.x
+            self.robot_player.calibration_body.to_feet[i,2] += msg.linear.z
 
     def listener_status_callback(self, msg):
         self.kill_flag = msg.data[0]
         self.rest_flag = msg.data[1]
-        self.calibration_flag = msg.data[2]
-        self.pose_mode = msg.data[3]
-        self.compliant_mode = msg.data[4]
+        self.pose_mode = msg.data[2]
+        self.calibration_flag = msg.data[3]
+        self.calibration_leg = msg.data[4]
+        self.robot_player.calibration_confirm = msg.data[5]
+        self.tmp = msg.data[6]
         if not (self.status_received):
             self.status_received = True
 
-    def get_parameters(self) :
+    def get_parameters(self):
         self.declare_parameter('fieldnames', ['','','','', '','','', '','','', '','',''])
         self.declare_parameter('body_to_feet0', [0.0 , 0.0 , 0.0, 0.0 , 0.0 , 0.0, 0.0 , 0.0 , 0.0, 0.0 , 0.0 , 0.0])
         self.declare_parameter('body_to_feet_rest', [0.0 , 0.0 , 0.0, 0.0 , 0.0 , 0.0, 0.0 , 0.0 , 0.0, 0.0 , 0.0 , 0.0])

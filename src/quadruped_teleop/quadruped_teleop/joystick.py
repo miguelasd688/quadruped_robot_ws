@@ -50,6 +50,8 @@ class RobotInputs:
         self.com_pos = np.zeros(3)
         self.com_orn = np.zeros(3)
         self.calibration = False
+        self.calibration_leg = 0
+        self.calibration_confirm = False
         self.calibration_increment_x = 0.0 # in meter
         self.calibration_increment_y = 0.0 # in meter
         self.calibration_increment_z = 0.0 # in meter
@@ -84,7 +86,7 @@ class RawValues:
 
         self.calibration_start_time = 0.0
         self.calibration_threshold = 1.5
-        self.calibration_increment = 0.00005 # in meter
+        self.calibration_increment = 0.0001 # in meter
         self.is_select_pressed = False
         self.calibration_threshold_triggered = False
 
@@ -127,13 +129,16 @@ class Joystick:
             if r:
                 for event in self.gamepad.read():
                     if event.type == ecodes.EV_KEY:
-                        if event.value == 1:                            
-    #                         if event.code == 307:#triangle
-    #                             if self.compliantMode == True:
-    #                                 self.compliantMode = False
-    #                             elif self.compliantMode == False:
-    #                                 self.compliantMode = True  
-                            if event.code == Controller()['square']:
+                        if event.value == 1:                     
+                            if event.code == Controller()['X']:
+                                if self.inputs.calibration:
+                                    self.inputs.calibration_confirm = True
+                            elif event.code == Controller()['triangle']:#triangle
+                                if self.inputs.calibration == True:
+                                    self.inputs.calibration_leg += 1
+                                    if self.inputs.calibration_leg >= 4:
+                                        self.inputs.calibration_leg = 0
+                            elif event.code == Controller()['square']:
                                 if self.inputs.pose_mode == True:
                                     self.inputs.pose_mode = False
                                 else:
@@ -171,6 +176,8 @@ class Joystick:
                             elif event.code == Controller()['l1']:#L1
                                 if (self.inputs.calibration):
                                     self.inputs.calibration_increment_z = 0.0
+                            elif event.code == Controller()['X']:
+                                self.inputs.calibration_confirm = False
                     #######################################  for my own joystick
                     #      ^           #     ^            #
                     #    ABS_Y         #    ABS_RY        #
