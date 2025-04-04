@@ -14,7 +14,7 @@ It is implemented with ROS2
 # From root workspace ROS 2 folder:
 
 ```
-source /opt/ros/humble/setup.bash
+source /opt/ros/$DISTRO/setup.bash
 colcon build
 source install/local_setup.bash
 ```

@@ -1,11 +1,14 @@
 {
-    "name": "ROS 2 Development Container",
+    "name": "ROS Development Container",
     "privileged": true,
-    "remoteUser": "miguelasd",
+    "remoteUser": "${localEnv:USER}",
     "build": {
         "dockerfile": "Dockerfile",
         "args": {
-            "USERNAME": "miguelasd"
+            "USERNAME": "${localEnv:USER}",
+            "DOCKER_REPO": "osrf/ros",
+            "ROS_DISTRO": "humble",
+            "IMAGE_SUFFIX": "-desktop-full"
         }
     },
     "workspaceFolder": "/home/ws",
@@ -29,13 +32,13 @@
     },
     "runArgs": [
         "--net=host",
-        "--pid=host",
-        "--ipc=host",
-        "-e", "DISPLAY=${env:DISPLAY}"
+        "-e", "DISPLAY=${env:DISPLAY}",
+        "--gpus", "all"
     ],
     "mounts": [
-       "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached",
-       "source=/dev/dri,target=/dev/dri,type=bind,consistency=cached"
+        "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached",
+        "source=/dev/dri,target=/dev/dri,type=bind,consistency=cached",
+        "source=${localEnv:HOME}/.ssh,target=/home/${localEnv:USER}/.ssh,type=bind"
     ],
-    "postCreateCommand": "sudo rosdep update && sudo rosdep install --from-paths src --ignore-src -y && sudo chown -R $(whoami) /home/ws/"
+    "postCreateCommand": "sh ./.devcontainer/postCreate.sh"
 }
