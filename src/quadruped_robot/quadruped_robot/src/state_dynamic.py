@@ -13,6 +13,10 @@ class DynamicState(State):
         print("DynamicState handle going to RestState. Going to StaticState first")
         self._robotPlayer.transitionTo(state_static.StaticState())
 
+    def handleCalibration(self) -> None:
+        print("DynamicState handle going to CalibrationState. Going to StaticState first")
+        pass
+
     def handleStatic(self) -> None:
         print("DynamicState staying in static mode.")
         self._robotPlayer.transitionTo(state_static.StaticState())

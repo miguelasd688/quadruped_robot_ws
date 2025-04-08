@@ -13,6 +13,9 @@ class KillState(State):
     def handleRest(self) -> None:
         pass
 
+    def handleCalibration(self) -> None:
+        pass
+
     def handleStatic(self) -> None:
         pass
         

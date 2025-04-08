@@ -52,7 +52,7 @@ class MoveController():
             self.action_now = self.actions['heigh_set']
 
         if (self.action_now == self.actions['heigh_set']):
-            move_time = 1
+            move_time = 0.4
             n_iterations = int(move_time/self.loop_latency)
             self.initAction(desired_body_to_feet, n_iterations)
             self.updateMovement(desired_body_to_feet, self.action_now, n_iterations)

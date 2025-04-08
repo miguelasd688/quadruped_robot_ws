@@ -7,6 +7,7 @@ import numpy as np
 from sys import exit
 
 from . import move_controller
+from . import calibration_controller
 from . import kinematic_model
 from . import gait_planner
 from .states_manager import StatesManager
@@ -47,13 +48,24 @@ class RobotPlayer(StatesManager):
         self.gait_offset = np.array(parameters['gait_offset0'])
         self.step_period0 = parameters['step_period0']
 
-        self.trot = gait_planner.TrotGait()
+        
+        self.calibration_body = RobotStateVariables(self.body_to_feet0, 
+                                        self.orientation0, 
+                                        self.position0)
+        self.calibration_increment_x = 0
+        self.calibration_increment_y = 0
+        self.calibration_increment_z = 0
+        self.calibration_confirm = False
 
         self.body = RobotStateVariables(self.body_to_feet_rest, 
                                         self.orientation0, 
                                         self.position0)
-        
+
+        self.calibration = calibration_controller.CalibrationController(self.loop_latency, self.body_to_feet0[0], self.body_to_feet0[0])
         self.controller = move_controller.MoveController(self.body, self.loop_latency)
+        self.trot = gait_planner.TrotGait()
+
+
 
     def killProgram(self):
         print("Reseting microcontroller and closing...")
@@ -63,13 +75,20 @@ class RobotPlayer(StatesManager):
                                                                           self.body.to_feet)
         exit()
 
-
     def robotResting(self):
         self.body.to_feet = self.body_to_feet_rest.copy()
         self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0, 
-                                                                          self.position0, 
-                                                                          self.body.to_feet)
+                                                                               self.position0, 
+                                                                               self.body.to_feet)
 
+    def calibrationControl(self):
+        #self.body.to_feet = self.calibration_body.to_feet.copy() # Static position.
+        self.calibration_body.to_feet[0] = self.calibration.executeRoutine(self.body.to_feet[0], 
+                                                                self.calibration_body.to_feet[0], 
+                                                                self.calibration_confirm)
+        self.body.joint_angles, _ = self.body.kinematics.solve(self.orientation0, 
+                                                                               self.position0, 
+                                                                               self.calibration_body.to_feet)
 
     def standUpMove(self):
         move_done = False
@@ -83,15 +102,15 @@ class RobotPlayer(StatesManager):
         move_done = False
         self.body.to_feet, move_done = self.controller.updateLayDown(self.body_to_feet_rest.copy())
         self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0, 
-                                                                          self.position0, 
-                                                                          self.body.to_feet)
+                                                                               self.position0, 
+                                                                               self.body.to_feet)
         return move_done
 
     def staticControl(self):
         self.body.to_feet = self.body_to_feet0.copy() # Static position.
         self.body.joint_angles, self.body.to_feet = self.body.kinematics.solve(self.orientation0 + self.body.orientation, 
-                                                                          self.position0 + self.body.position, 
-                                                                          self.body.to_feet)
+                                                                               self.position0 + self.body.position, 
+                                                                               self.body.to_feet)
 
 
     def dynamicControl(self):

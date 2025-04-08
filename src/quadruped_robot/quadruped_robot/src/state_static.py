@@ -4,6 +4,7 @@ from .state import State
 from . import state_kill
 from . import state_rest
 from . import state_dynamic
+from . import state_calibration
 
 class StaticState(State):
     def handleKill(self) -> None:
@@ -14,6 +15,10 @@ class StaticState(State):
         if (self._robotPlayer.layDownMove()):
             print("StaticState handle going to RestState. Going to RestState")
             self._robotPlayer.transitionTo(state_rest.RestState())
+    
+    def handleCalibration(self) -> None:
+        print("StaticState handle going to CalibrationState. Going to CalibrationState")
+        self._robotPlayer.transitionTo(state_calibration.CalibrationState())
 
     def handleStatic(self) -> None:
         if not (self.is_active):

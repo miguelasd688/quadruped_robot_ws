@@ -16,6 +16,7 @@ class PS5Controller(Node):
         super().__init__('joystick_teleop')
         self.cmd_publisher = self.create_publisher(Twist, 'cmd_vel', 10)
         self.com_state_publisher = self.create_publisher(Twist, 'com_state', 10)
+        self.leg_calibration_publisher = self.create_publisher(Twist, 'leg_calibration', 10)
         self.status_publisher = self.create_publisher(Int8MultiArray, 'controller_status', 10)
         self.timer = self.create_timer(0.01, self.read_joystick)
         
@@ -55,14 +56,22 @@ class PS5Controller(Node):
         com_state.angular.z = self.inputs.com_orn[2]
         self.com_state_publisher.publish(com_state)
 
+        leg_calibration = Twist()
+        leg_calibration.linear.x = self.inputs.calibration_increment_x
+        leg_calibration.linear.y = self.inputs.calibration_increment_y
+        leg_calibration.linear.z = self.inputs.calibration_increment_z
+        self.leg_calibration_publisher.publish(leg_calibration)
 
     def publishStatus(self):
         status_msg = Int8MultiArray()
         status_msg.data = [
-            int(self.inputs.kill),            # Kill flag
-            int(self.inputs.rest_mode),       # Rest flag
-            int(self.inputs.pose_mode),       # Pose mode
-            int(self.inputs.compliant_mode)   # Compliant mode
+            bool(self.inputs.kill),            # Kill flag
+            bool(self.inputs.rest_mode),       # Rest flag
+            bool(self.inputs.pose_mode),       # Pose mode
+            bool(self.inputs.calibration),     # Calibration flag
+            int(self.inputs.calibration_leg),  # Calibration leg
+            bool(self.inputs.calibration_confirm),     # Calibration flag
+            int(self.inputs.compliant_mode)    # Compliant mode
         ]
         self.status_publisher.publish(status_msg)
 
@@ -88,6 +97,8 @@ class PS5Controller(Node):
             self.get_logger().info(f'    · pose_mode: {self.inputs.pose_mode}, rest_flag: {self.inputs.rest_mode}, kill_flag:{self.inputs.kill}')
             self.get_logger().info('  Body input:')
             self.get_logger().info(f'    · CoM_pos: {self.inputs.com_pos}, CoM_orn: {self.inputs.com_orn}')
+            self.get_logger().info(f'  Calibration input: {self.inputs.calibration} -> leg number: {self.inputs.calibration_leg}')
+            self.get_logger().info(f'    · x: {self.inputs.calibration_increment_x}, y: {self.inputs.calibration_increment_y}, z: {self.inputs.calibration_increment_z}    | Confirm : {self.inputs.calibration_confirm}')
             self.get_logger().info('  Step input:')
             self.get_logger().info(f'    · Vel: {round(self.inputs.linear_velocity,3)} m/sec, angle: {round(self.inputs.linear_angle,3)} deg, Wrot: {round(self.inputs.angular_velocity)}rad/sec')
 

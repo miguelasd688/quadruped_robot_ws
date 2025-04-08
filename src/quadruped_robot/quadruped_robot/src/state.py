@@ -31,6 +31,10 @@ class State(ABC):
         pass
 
     @abstractmethod
+    def handleCalibration(self) -> None:
+        pass
+    
+    @abstractmethod
     def handleKill(self) -> None:
         pass
     
@@ -41,6 +45,7 @@ class State(ABC):
     @abstractmethod
     def handleDynamic(self) -> None:
         pass
+
 
 
 

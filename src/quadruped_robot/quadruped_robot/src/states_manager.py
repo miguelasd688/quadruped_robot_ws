@@ -37,7 +37,10 @@ class StatesManager:
 
     def updateRest(self):
         self._state.handleRest()
-    
+        
+    def updateCalibrationControl(self):
+        self._state.handleCalibration()
+
     def updateStaticControl(self):
         self._state.handleStatic()
 
