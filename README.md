@@ -11,6 +11,13 @@ It is implemented with ROS2
 * 
 * Use `View->Command Palette...` or `Ctrl+Shift+P` to open the command palette. Search for the command `Dev Containers: Reopen in Container` and execute it. This will build your development docker container for your. 
 
+# To build devcontainer image for fully automated start
+1. `sudo apt install npm`
+2. Install Dev Container CLI (need sudo priviliege): `sudo npm install -g @devcontainers/cli`
+3. Start the devcontainer: `devcontainer up --workspace-folder .` 
+4. You wan't to interact with a container's terminal you can run: `devcontainer exec --workspace-folder <folder> /bin/sh`
+
+
 # From root workspace ROS 2 folder:
 
 ```
@@ -82,3 +89,7 @@ connect CONTROLLER_MAC_ADDRESS
 trust CONTROLLER_MAC_ADDRESS
 quit
 ```
+
+
+
+si se joden los permisos en wsl: sudo chown -R $USER:$USER /home/
