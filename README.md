@@ -54,6 +54,8 @@ ros2 run quadruped_robot robot_run --ros-args --params-file src/quadruped_robot/
 
 # Launch robot and teleop
 
+ros2 run quadruped_teleop joystick_teleop --ros-args --params-file src/quadruped_teleop/config/params.yaml
+
 * PS5 controller teleop:
 ```
 ros2 launch quadruped_teleop ps5_controller.launch.py
