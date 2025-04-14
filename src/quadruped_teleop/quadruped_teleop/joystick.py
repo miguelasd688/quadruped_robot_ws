@@ -185,7 +185,7 @@ class Joystick:
                             elif event.code == Controller()['X']:
                                 if self.inputs.calibration:
                                     self.inputs.calibration_action += 1
-                                    if (self.inputs.calibration_action >= self.inputs.number_of_actions):
+                                    if (self.inputs.calibration_action >= self.raw.number_of_actions):
                                         self.raw.calibration_action_start_time = time.time()
                                     
                     #######################################  for my own joystick
@@ -250,7 +250,7 @@ class Joystick:
                             self.inputs.calibration = True
                             self.inputs.calibration_action = 0
 
-            if (self.inputs.calibration_action >= self.inputs.number_of_actions):
+            if (self.inputs.calibration_action >= self.raw.number_of_actions):
                 if ((time.time() - self.raw.calibration_action_start_time) >= self.raw.calibration_action_threshold):
                     self.inputs.calibration_action = 0
 
