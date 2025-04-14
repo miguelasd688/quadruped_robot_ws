@@ -13,27 +13,31 @@ void Actuators::SetNewServo(uint32_t pin) {
   pinMode(pin, OUTPUT);
 }
 
-bool Actuators::StepMotors(bool RUN, bool SAFE, LegsAngle targetAngles) {
+bool Actuators::StepMotors(bool RUN, bool SAFE, int calAction, int calLeg, LegsAngle targetAngles) {
   //----------------if safe is already False, mantein servos in last position--------
   if (RUN == true) {
     targetAngles = IK.CalculateRobotAngles(targetAngles);
-    for (int i = 0; i < 12; i++) {
-      anglesServo.asArray[i] = targetAngles.asArray[i];
+    MoveServos(targetAngles);
+
+    if (calibration.CheckStatus(calAction, calLeg, targetAngles)) {
+      for (int i = 0; i < 3; i++) {
+        a[i + 3 * calLeg] = calibration.ComputeInterpolationA();
+        b[i + 3 * calLeg] = calibration.ComputeInterpolationB();
+      }
     }
-    Actuators::MoveServos();
     return false;
-  } else if (RUN == false and SAFE == false) {
+  } else {
     return false;
   }
   return true;
 }
 
-void Actuators::MoveServos() {
+void Actuators::MoveServos(LegsAngle targetAngles) {
   float angle;
   float ll;
   float hl;
   for (int i = 0; i < 12; i++) {
-    anglesServo.asArray[i] = CheckLimits(anglesServo.asArray[i], lowLim[i], highLim[i]);
+    anglesServo.asArray[i] = CheckLimits(targetAngles.asArray[i], lowLim[i], highLim[i]);
     fineAngle = a[i] * anglesServo.asArray[i] + b[i];
     ServoWrite(actuators_pin[i], fineAngle);
   }

@@ -72,7 +72,7 @@ private:
 public:
   ActuatorsEncoders();
   void ReadRawEncoders();
-  void ReadEncoders();  
+  void ReadFilteredEncoders();  
   void ReadEncoderAngles();
   float GetEncoderRawValue(int i);
 };

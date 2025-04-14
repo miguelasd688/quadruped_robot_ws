@@ -57,7 +57,7 @@ void ActuatorsEncoders::ReadRawEncoders() {
   anglesEncoders.asArray[11] = analog12.getValue();
 }
 
-void ActuatorsEncoders::ReadEncoders() {
+void ActuatorsEncoders::ReadFilteredEncoders() {
   ActuatorsEncoders::ReadRawEncoders();
   
   enc1 = KFilter1.updateEstimate(anglesEncoders.asArray[0]);
@@ -75,7 +75,7 @@ void ActuatorsEncoders::ReadEncoders() {
 }
 
 void ActuatorsEncoders::ReadEncoderAngles() {
-  ActuatorsEncoders::ReadEncoders();
+  ActuatorsEncoders::ReadRawEncoders();
 
   eang1 = ae[0] * enc1 + be[0];
   eang2 = ae[1] * enc2 + be[1];
