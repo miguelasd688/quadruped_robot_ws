@@ -3,7 +3,7 @@ from __future__ import annotations
 from .state import State
 from . import state_kill
 from . import state_rest
-from . import state_dynamic
+from . import state_static
 from . import state_dynamic
 
 class CalibrationState(State):
@@ -22,8 +22,8 @@ class CalibrationState(State):
         self._robotPlayer.calibrationControl()
 
     def handleStatic(self) -> None:
-        print("CalibrationState handles going to StaticState. Terminate calibration first")
-        pass
+        print("CalibrationState handles going to StaticState.")
+        self._robotPlayer.transitionTo(state_static.StaticState())
 
     def handleDynamic(self) -> None:
         print("CalibrationState handles going to DynamicState. Terminate calibration first")

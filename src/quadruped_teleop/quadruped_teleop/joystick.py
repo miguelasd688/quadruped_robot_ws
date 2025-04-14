@@ -13,6 +13,9 @@ from os import system, name
 from evdev import InputDevice, categorize, ecodes
 from select import select
 
+###############################
+# This file needs refactoring #
+###############################
 
 def Controller():
     #code values for PS5 controller
@@ -51,7 +54,7 @@ class RobotInputs:
         self.com_orn = np.zeros(3)
         self.calibration = False
         self.calibration_leg = 0
-        self.calibration_confirm = False
+        self.calibration_action = 0
         self.calibration_increment_x = 0.0 # in meter
         self.calibration_increment_y = 0.0 # in meter
         self.calibration_increment_z = 0.0 # in meter
@@ -85,10 +88,13 @@ class RawValues:
         self.square=0
 
         self.calibration_start_time = 0.0
-        self.calibration_threshold = 1.5
+        self.calibration_threshold = 1.0
         self.calibration_increment = 0.0001 # in meter
         self.is_select_pressed = False
         self.calibration_threshold_triggered = False
+        self.calibration_action_start_time = 0.0
+        self.calibration_action_threshold = 2.0
+        self.number_of_actions = 5
 
 class Joystick:
 
@@ -130,10 +136,10 @@ class Joystick:
                 for event in self.gamepad.read():
                     if event.type == ecodes.EV_KEY:
                         if event.value == 1:                     
-                            if event.code == Controller()['X']:
-                                if self.inputs.calibration:
-                                    self.inputs.calibration_confirm = True
-                            elif event.code == Controller()['triangle']:#triangle
+                            #if event.code == Controller()['X']:
+                            #    if self.inputs.calibration:
+                            #        self.inputs.calibration_action = True
+                            if event.code == Controller()['triangle']:#triangle
                                 if self.inputs.calibration == True:
                                     self.inputs.calibration_leg += 1
                                     if self.inputs.calibration_leg >= 4:
@@ -177,7 +183,11 @@ class Joystick:
                                 if (self.inputs.calibration):
                                     self.inputs.calibration_increment_z = 0.0
                             elif event.code == Controller()['X']:
-                                self.inputs.calibration_confirm = False
+                                if self.inputs.calibration:
+                                    self.inputs.calibration_action += 1
+                                    if (self.inputs.calibration_action >= self.inputs.number_of_actions):
+                                        self.raw.calibration_action_start_time = time.time()
+                                    
                     #######################################  for my own joystick
                     #      ^           #     ^            #
                     #    ABS_Y         #    ABS_RY        #
@@ -235,8 +245,14 @@ class Joystick:
                         self.raw.calibration_threshold_triggered = True
                         if (self.inputs.calibration):
                             self.inputs.calibration = False
+                            self.inputs.calibration_action = 0
                         else:
                             self.inputs.calibration = True
+                            self.inputs.calibration_action = 0
+
+            if (self.inputs.calibration_action >= self.inputs.number_of_actions):
+                if ((time.time() - self.raw.calibration_action_start_time) >= self.raw.calibration_action_threshold):
+                    self.inputs.calibration_action = 0
 
             self.raw.l_joy[0] = self.raw.L3data[0]*0.1 + last_l_joy[0]*0.9
             self.raw.l_joy[1] = self.raw.L3data[1]*0.1 + last_l_joy[1]*0.9

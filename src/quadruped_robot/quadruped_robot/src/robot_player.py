@@ -55,7 +55,7 @@ class RobotPlayer(StatesManager):
         self.calibration_increment_x = 0
         self.calibration_increment_y = 0
         self.calibration_increment_z = 0
-        self.calibration_confirm = False
+        self.calibration_action = 0
 
         self.body = RobotStateVariables(self.body_to_feet_rest, 
                                         self.orientation0, 
@@ -85,7 +85,7 @@ class RobotPlayer(StatesManager):
         #self.body.to_feet = self.calibration_body.to_feet.copy() # Static position.
         self.calibration_body.to_feet[0] = self.calibration.executeRoutine(self.body.to_feet[0], 
                                                                 self.calibration_body.to_feet[0], 
-                                                                self.calibration_confirm)
+                                                                self.calibration_action)
         self.body.joint_angles, _ = self.body.kinematics.solve(self.orientation0, 
                                                                                self.position0, 
                                                                                self.calibration_body.to_feet)
