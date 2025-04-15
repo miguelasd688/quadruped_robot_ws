@@ -44,7 +44,7 @@ private:
                   197.89534, -5.33768, -32.23424
                  };
 
-  struct LegsAngle anglesEncoders;
+  LegsAngle anglesEncoders;
 
   float eang1 , eang2 , eang3 , eang4 , eang5 , eang6 , eang7 , eang8 , eang9 , eang10 , eang11 , eang12;
   float enc1 , enc2 , enc3 , enc4 , enc5 , enc6 , enc7 , enc8 , enc9 , enc10 , enc11 , enc12;

@@ -6,6 +6,7 @@
 
 #include "InverseKinematicsSolver.h"
 #include "CalibrationController.h"
+#include "CalibrationStorage.h"
 
 class Actuators {
 private:
@@ -42,7 +43,7 @@ private:
   float lowLim[12] = { 50, 30, 30, 50, 30, 30, 50, 30, 30, 50, 30, 30 };
   float highLim[12] = { 130, 150, 150, 130, 150, 150, 130, 150, 150, 130, 150, 150 };
 
-  struct LegsAngle anglesServo;
+  LegsAngle anglesServo;
   float fineAngle;
   int legCalibration;
 

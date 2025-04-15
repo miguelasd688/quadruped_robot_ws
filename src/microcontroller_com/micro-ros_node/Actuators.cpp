@@ -13,11 +13,15 @@ void Actuators::SetNewServo(uint32_t pin) {
   pinMode(pin, OUTPUT);
 }
 
-bool Actuators::StepMotors(bool RUN, bool SAFE, int calAction, int calLeg, LegsAngle targetAngles) {
+bool Actuators::StepMotors(bool ARMED, bool SAFE, int calAction, int calLeg, LegsAngle targetAngles) {
   //----------------if safe is already False, mantein servos in last position--------
-  if (RUN == true) {
+  if (ARMED == true) {
     targetAngles = IK.CalculateRobotAngles(targetAngles);
     MoveServos(targetAngles);
+
+    char buffer[200];
+    snprintf(buffer, 200, "C: %.2f | F: %.2f | T: %.2f", targetAngles.asArray[0], targetAngles.asArray[1], targetAngles.asArray[2]);
+    Debugger::Log(buffer);
 
     if (calibration.CheckStatus(calAction, calLeg, targetAngles)) {
       for (int i = 0; i < 3; i++) {

@@ -17,8 +17,9 @@ void InitTargetAngleMsg()
 
 void InitCalibrationMsg()
 {
-  calibration_msg.data.capacity = 1;
-  calibration_msg.data.size = 6;
+  std_msgs__msg__Int8MultiArray__init(&calibration_msg);
+  calibration_msg.data.capacity = 10;
+  calibration_msg.data.size = 2;
   calibration_msg.data.data = (int8_t*) malloc(status_msg.data.size * sizeof(int8_t)); 
 }
 
@@ -70,8 +71,9 @@ bool create_entities()
     &calibration_subscriber,
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int8MultiArray),
-    "calibration_msg"));
+    "calibration_controller"));
   InitCalibrationMsg();
+
 
   // create imu publisher
   RCCHECK(rclc_publisher_init_best_effort(
@@ -105,6 +107,18 @@ bool create_entities()
   status_msg.data.size = 6;
   status_msg.data.data = (int8_t*) malloc(status_msg.data.size * sizeof(int8_t)); 
 
+  // create debugger publisher
+  RCCHECK(rclc_publisher_init_best_effort(
+    &debug_publisher,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, String),
+    "debug_msg"));
+  std_msgs__msg__String__init(&debug_msg);
+  const unsigned int DEBUG_MSG_CAPACITY = 30;
+  debug_msg.data.data = malloc(DEBUG_MSG_CAPACITY);
+  debug_msg.data.capacity = DEBUG_MSG_CAPACITY;
+  debug_msg.data.size = strlen(debug_msg.data.data);
+
   // create timer,
   RCCHECK(rclc_timer_init_default(
     &timer,
@@ -114,7 +128,7 @@ bool create_entities()
 
   // create executors
   executor_pub = rclc_executor_get_zero_initialized_executor();
-  RCCHECK(rclc_executor_init(&executor_pub, &support.context, 4, &allocator));
+  RCCHECK(rclc_executor_init(&executor_pub, &support.context, 1, &allocator));
   RCCHECK(rclc_executor_add_timer(&executor_pub, &timer));
   RCCHECK(rclc_executor_init(&executor_sub, &support.context, 2, &allocator));
   RCCHECK(rclc_executor_add_subscription(&executor_sub, &angles_subscriber, &angles_msg, &angles_callback, ON_NEW_DATA));
@@ -125,7 +139,7 @@ bool create_entities()
 
 void CleanupEncodersMsg()
 {
-  for (int i = 0; i < encoders_msg.name.size; i++) {
+  for (size_t i = 0; i < encoders_msg.name.size; i++) {
     free(encoders_msg.name.data[i].data); // Liberar memoria de cada cadena
   }
   free(encoders_msg.name.data);           // Liberar la secuencia de nombres

@@ -13,20 +13,21 @@ bool CalibrationController::CheckStatus(int calAction, int calLeg, LegsAngle tar
     case 1: // Set first reference point, calibration started
       for (int i = 0; i < 3; i++)
       {
+        Debugger::Log("Calibration set point 1");
         SetInitialPoint(desiredAngles1[i + 3 * calLeg], targetAngles.asArray[i + 3 * calLeg]);
       }
       break;
     case 2: // Set second reference point, calibration in progress
       for (int i = 0; i < 3; i++)
       {
+        Debugger::Log("Calibration set point 2");
         SetFinalPoint(desiredAngles2[i + 3 * calLeg], targetAngles.asArray[i + 3 * calLeg]);
       }
-      break;
-    case 3: // Calibration terminated, return true to compute calibration 
+      break; 
+    default: // Calibration terminated, return true to compute calibration
+      Debugger::Log("Calibration terminate"); 
       this->lastAction = calAction;
       return true;
-    default:
-      break;
     }
     this->lastAction = calAction;
     return false;

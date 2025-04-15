@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 #include <math.h>
+#include "Debugger.h"
+#include "CalibrationStorage.h"
 
 struct AngleVector
 {
@@ -29,9 +31,11 @@ struct CoordinatesVector
   float z;
 };
 
+
 static float deg2rad(float deg){
   return deg* 2 * PI / 360.0;
 }
+
 static float rad2deg(float rad){
   return rad* 360.0 / (2 * PI);
 }

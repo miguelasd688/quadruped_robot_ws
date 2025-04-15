@@ -7,21 +7,22 @@
 #include <rclc/executor.h>
 #include <rmw_microros/rmw_microros.h>
  
-#include <std_msgs/msg/int32.h>
+
 #include <geometry_msgs/msg/twist.h>
 #include <sensor_msgs/msg/battery_state.h>
 #include <sensor_msgs/msg/joint_state.h>
 #include <sensor_msgs/msg/imu.h>
 #include <std_msgs/msg/header.h>
-
+#include <std_msgs/msg/int32.h>
 #include <std_msgs/msg/float32_multi_array.h>
 #include <std_msgs/msg/int8_multi_array.h>
+#include <std_msgs/msg/string.h>
 
 #include "IMUSensor.h"
 #include "Actuators.h"
 #include "ActuatorsEncoders.h"
-
-
+#include "Debugger.h"
+#include "CalibrationStorage.h"
 
 #define LED_PIN 13
 #define RESTART_ADDR 0xE000ED0C
@@ -35,11 +36,10 @@
   if (uxr_millis() - init > MS) { X; init = uxr_millis();} \
 } while (0)\
 
-bool REST = false;
 bool SAFE = true;
+bool ARMED = false;
 bool KILL = false;
-bool isRunning = false;
-bool RUN = false;
+bool isArmed = false;
 bool Push = false;
 bool oPush = false;
 int calibrationAction = 0;
@@ -51,7 +51,7 @@ int pinPush = 32; // pin push botton
 float pressAt;
 float publisher_latency = 0;
 
-struct LegsAngle anglesIK;
+LegsAngle anglesIK;
 
 rclc_support_t support;
 rcl_node_t node;
@@ -67,6 +67,8 @@ rcl_publisher_t battery_state_publisher;
 sensor_msgs__msg__BatteryState battery_msg;
 rcl_publisher_t status_publisher;
 std_msgs__msg__Int8MultiArray status_msg;
+rcl_publisher_t debug_publisher;
+std_msgs__msg__String debug_msg;
 
 rclc_executor_t executor_sub;
 rcl_subscription_t angles_subscriber;
@@ -86,6 +88,7 @@ const char *jointNames[numJoint] = {"coxaF_FR","femurF_FR","tibiaF_FR",
                                     "coxaF_FL","femurF_FL","tibiaF_FL",
                                     "coxaF_BR","femurF_BR","tibiaF_BR",
                                     "coxaF_BL","femurF_BL","tibiaF_BL"};
+
 
 enum states {
   WAITING_AGENT,
@@ -110,8 +113,8 @@ void PublishStatusData()
 {
   status_msg.data.data[0] = KILL;
   status_msg.data.data[1] = SAFE;
-  status_msg.data.data[2] = REST;
-  status_msg.data.data[3] = RUN;
+  status_msg.data.data[2] = 2;
+  status_msg.data.data[3] = calibrationLeg;
   status_msg.data.data[4] = calibrationAction;
   status_msg.data.data[5] = (int8_t)(publisher_latency);
   rcl_publish(&status_publisher, &status_msg, NULL);
@@ -144,7 +147,7 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
     PublishStatusData();
     PublishEncodersData();
     PublishBatteryStateData();
-    
+
     if (state == AGENT_CONNECTED) {
       digitalWrite(LED_PIN, 1);
     } else {
@@ -159,7 +162,7 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
     //Vin = 7;
   
     //UPDATE BUTTON STATUS LED
-    if (RUN == true) {
+    if (ARMED == true) {
       digitalWrite(pinLed, HIGH);
     }
     else {
@@ -168,7 +171,7 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
     if (KILL == true) {
       //WRITE_RESTART(0x5FA0004);
     }
-    SAFE = actuators.StepMotors(RUN, SAFE, calibrationAction, calibrationLeg, anglesIK);
+    SAFE = actuators.StepMotors(ARMED, SAFE, calibrationAction, calibrationLeg, anglesIK);
   }
 }
 
@@ -177,10 +180,11 @@ void angles_callback(const void * msgin)
   const sensor_msgs__msg__JointState * incoming_angles_msg = (const sensor_msgs__msg__JointState *)msgin;
   if (incoming_angles_msg != NULL)
   {
-    if (!isRunning)
+    if (!isArmed)
     {
-      RUN = true;
-      isRunning = true;
+      Debugger::Log("Robot armed!!");
+      ARMED = true;
+      isArmed = true;
     }
     for (int i = 0; i < numJoint; i++)
     {
@@ -204,6 +208,7 @@ void calibration_callback(const void * msgin)
 void setup() {
   set_microros_transports();
   pinMode(LED_PIN, OUTPUT);
+  Debugger::Init(&debug_publisher, &debug_msg);
 
   state = WAITING_AGENT;
 
@@ -233,7 +238,7 @@ void loop() {
       //TODO: make reconnection works, seems there is troubles destroying entities. 
       //destroy_entities();
       //state = WAITING_AGENT;
-      RUN = false;
+      ARMED = false;
       WRITE_RESTART(0x5FA0004);
       break;
     default:
